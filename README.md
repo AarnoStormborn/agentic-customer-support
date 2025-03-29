@@ -8,6 +8,12 @@ using **OpenAI Agents SDK**.
 * Database Agent (SQL)
 * Web Search Agent
 
+
+## System Architecture
+
+![Logging Example](https://raw.githubusercontent.com/AarnoStormborn/agentic-customer-support/d811efa1e7b6d6a3726566fdd422ac94b21aa28c/assets/sys-arch-acs.png)
+
+
 In this project, I want to explore, learn and implement the following:
 
 * OpenAI Agents SDK
