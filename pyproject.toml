@@ -1,0 +1,10 @@
+[project]
+name = "agentic-customer-support"
+version = "0.1.0"
+description = "Multi-Agent system for Technical Customer Support"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "openai>=1.69.0",
+    "openai-agents>=0.0.7",
+]
