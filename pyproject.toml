@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "agentic-customer-support"
 version = "0.1.0"
@@ -5,6 +9,16 @@ description = "Multi-Agent system for Technical Customer Support"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "box>=0.1.5",
     "openai>=1.69.0",
     "openai-agents>=0.0.7",
+    "pandas>=2.2.3",
+    "psycopg2-binary>=2.9.10",
+    "pyaml>=25.1.0",
+    "python-box>=7.3.2",
+    "sqlalchemy>=2.0.40",
 ]
+
+[tool.setuptools]
+packages = ["src"]
+
