@@ -9,9 +9,9 @@ CREATE TABLE t_docs (
 
 CREATE TABLE t_docs_chunks (
     id BIGSERIAL PRIMARY KEY,
-    doc_id bigsBIGSERIALerial NOT NULL REFERENCES t_docs(id),
+    doc_id BIGSERIAL NOT NULL REFERENCES t_docs(id),
     chunk jsonb NOT NULL,
-    embedding vector(1024) NOT NULL,
+    embedding vector(1536) NOT NULL,
     created_at TIMESTAMP DEFAULT now()
 );
 
