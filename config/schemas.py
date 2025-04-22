@@ -20,6 +20,8 @@ class Document(Base):
     doc_name: Mapped[str] = mapped_column(String(256))
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now())
     
+    chunks: Mapped[List["DocumentChunk"]] = relationship("DocumentChunk", back_populates="document", cascade="all, delete-orphan")
+    
     def __repr__(self) -> str:
         return f"Document(id={self.id!r}, doc_name={self.doc_name!r}, created_at={self.created_at!r})"
     
