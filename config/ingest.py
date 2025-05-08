@@ -7,7 +7,7 @@ import typing as T
 from pypdf import PdfReader
 from datetime import datetime
 
-from sqlalchemy import create_engine, insert
+from sqlalchemy import create_engine
 from sqlalchemy.orm import Session
 
 from schemas import (
