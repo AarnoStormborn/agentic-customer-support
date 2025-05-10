@@ -25,8 +25,7 @@ def run_sql_queries(query: str) -> str:
         
         logger.info("Calling SQL tool")
         
-        db_string = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@localhost:5433/{os.getenv('POSTGRES_DB')}"
-        print(db_string)
+        db_string = os.getenv("DB_STRING")
         engine = create_engine(db_string)
         
         with engine.connect() as conn:
@@ -37,7 +36,7 @@ def run_sql_queries(query: str) -> str:
         return str(result.all()) if result else "No results found"
     
     except Exception as e:
-        logger.warning(CustomException(e))
+        logger.error(CustomException(e))
         return f"Error executing query: {e}"    
     
     

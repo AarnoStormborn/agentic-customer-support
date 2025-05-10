@@ -197,7 +197,7 @@ if __name__=="__main__":
     
     filepath = "./config/data/tickets.csv"
     table_name = "tickets"    
-    db_string = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@localhost:5433/{os.getenv('POSTGRES_DB')}"
+    db_string = os.getenv("DB_STRING")
     
     ingest_sql_database(
         filepath,
