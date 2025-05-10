@@ -199,11 +199,11 @@ if __name__=="__main__":
     table_name = "tickets"    
     db_string = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@localhost:5433/{os.getenv('POSTGRES_DB')}"
     
-    # ingest_sql_database(
-    #     filepath,
-    #     table_name,
-    #     db_string
-    # )
+    ingest_sql_database(
+        filepath,
+        table_name,
+        db_string
+    )
     
     print(db_string)
     

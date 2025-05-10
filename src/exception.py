@@ -1,5 +1,5 @@
 import sys
-from logger import logger
+from src.logger import logger
 
 def message_detail(error):
     exc_type, exc_value, exc_traceback = sys.exc_info()

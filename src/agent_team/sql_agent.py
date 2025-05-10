@@ -1,7 +1,7 @@
 import os
 from agents import Agent, function_tool
 
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 from src.logger import logger
 from src.exception import CustomException
@@ -26,14 +26,15 @@ def run_sql_queries(query: str) -> str:
         logger.info("Calling SQL tool")
         
         db_string = f"postgresql://{os.getenv('POSTGRES_USER')}:{os.getenv('POSTGRES_PASSWORD')}@localhost:5433/{os.getenv('POSTGRES_DB')}"
+        print(db_string)
         engine = create_engine(db_string)
         
         with engine.connect() as conn:
-            result = conn.execute(query)
-        
+            result = conn.execute(text(query))
+            
         logger.info("Query Executed")
             
-        return str(result) if result else "No results found"
+        return str(result.all()) if result else "No results found"
     
     except Exception as e:
         logger.warning(CustomException(e))
@@ -50,8 +51,4 @@ def init_sql_agent(name: str, prompt: str) -> Agent:
     )
     
     return agent
-
-            
-            
-            
     

@@ -1,0 +1,10 @@
+schema:
+  customer_name: text
+  customer_email: text
+  customer_age: int
+  customer_gender: "text (Male, Female, Other)"
+  product_purchased: "text (LG Smart TV, iPhone, Sony PlayStation, Google Pixel, HP Pavilion, LG OLED, Dell XPS, Sony Xperia)"
+  date_of_purchase: datetime
+  ticket_type: "text (Refund request, Billing inquiry, Product inquiry, Cancellation request, Technical issue)"
+  ticket_priority: "text (Critical, High, Medium, Low)"
+  ticket_channel: "text (Social Media, Email, Phone, Chat)"
