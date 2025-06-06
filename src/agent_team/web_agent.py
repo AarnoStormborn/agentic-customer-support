@@ -4,7 +4,7 @@ import os
 from agents import Agent, WebSearchTool
 
 
-def init_web_search_agent(name, prompt) -> Agent:
+def init_web_agent(name, prompt) -> Agent:
     agent = Agent(
         name=name,
         tools=[WebSearchTool()],
