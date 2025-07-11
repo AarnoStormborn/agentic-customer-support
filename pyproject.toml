@@ -19,6 +19,7 @@ dependencies = [
     "pypdf>=5.4.0",
     "python-box>=7.3.2",
     "sqlalchemy>=2.0.40",
+    "redis>=6.0.0"
 ]
 
 [tool.setuptools]

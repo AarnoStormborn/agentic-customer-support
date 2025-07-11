@@ -34,16 +34,12 @@ def retriever_tool(query: str, top_k: int):
         db_string = os.getenv("DB_STRING")
         engine = create_engine(db_string)
         
-        embedding_str = f"'{str(embedding)}'"
-        
         sql_query = f"""
             SELECT id, chunk, created_at
             FROM t_docs_chunks
             ORDER BY embedding <#> '{str(embedding)}'::vector
             LIMIT {top_k}
         """
-        
-        
         
         with engine.connect() as conn:
             result = conn.execute(text(sql_query))

@@ -2,7 +2,7 @@ import sys
 from src.logger import logger
 
 def message_detail(error):
-    exc_type, exc_value, exc_traceback = sys.exc_info()
+    _, _, exc_traceback = sys.exc_info()
     if exc_traceback is not None:
         filename = exc_traceback.tb_frame.f_code.co_filename
         line_number = exc_traceback.tb_lineno
