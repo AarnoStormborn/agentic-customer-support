@@ -1,5 +1,7 @@
+from google.adk import Agent
+from google.adk.tools import FunctionTool
+from src.models.litellm_model import LiteLLMModel
 import os
-from agents import Agent, function_tool
 
 from sqlalchemy import create_engine, text
 
@@ -7,7 +9,6 @@ from src.logger import logger
 from src.exception import CustomException
 
 
-@function_tool
 def run_sql_queries(query: str) -> str:
     
     """
@@ -30,7 +31,7 @@ def run_sql_queries(query: str) -> str:
         
         with engine.connect() as conn:
             result = conn.execute(text(query))
-            
+                    
         logger.info("Query Executed")
             
         return str(result.all()) if result else "No results found"
@@ -41,13 +42,13 @@ def run_sql_queries(query: str) -> str:
     
     
 def init_sql_agent(name: str, prompt: str) -> Agent:
+    model = LiteLLMModel(model=os.getenv("OPENAI_MODEL"))
     
     agent = Agent(
         name=name,
-        tools=[run_sql_queries],
-        instructions=prompt,
-        model=os.getenv("OPENAI_MODEL")
+        tools=[FunctionTool(run_sql_queries)],
+        instruction=prompt,
+        model=model
     )
     
     return agent
-    

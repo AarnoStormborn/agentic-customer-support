@@ -1,7 +1,9 @@
 """ RAG / Knowledge Base Agent """
 
 import os
-from agents import Agent, function_tool
+from google.adk import Agent
+from google.adk.tools import FunctionTool
+from src.models.litellm_model import LiteLLMModel
 
 from sqlalchemy import create_engine, text
 
@@ -9,7 +11,6 @@ from src.utils import generate_embeddings
 from src.logger import logger
 from src.exception import CustomException
 
-@function_tool
 def retriever_tool(query: str, top_k: int):
     
     """
@@ -58,12 +59,13 @@ def retriever_tool(query: str, top_k: int):
 
 
 def init_rag_agent(name: str, prompt: str) -> Agent:
+    model = LiteLLMModel(model=os.getenv('OPENAI_MODEL'))
     
     agent = Agent(
         name=name,
-        instructions=prompt,
-        tools=[retriever_tool],
-        model=os.getenv('OPENAI_MODEL')
+        instruction=prompt,
+        tools=[FunctionTool(retriever_tool)],
+        model=model
     )
     
     return agent

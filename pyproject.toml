@@ -9,9 +9,12 @@ description = "Multi-Agent system for Technical Customer Support"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "asyncpg>=0.29.0",
     "box>=0.1.5",
+    "google-adk>=0.0.1",
+    "litellm>=1.0.0",
+    "duckduckgo-search>=5.0.0",
     "openai>=1.69.0",
-    "openai-agents>=0.0.7",
     "pandas>=2.2.3",
     "pgvector>=0.4.0",
     "psycopg2-binary>=2.9.10",
