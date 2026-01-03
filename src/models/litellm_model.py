@@ -3,15 +3,18 @@ from typing import AsyncGenerator, List, Dict, Any, Optional
 from google.adk.models import BaseLlm, LlmRequest, LlmResponse
 from google.genai import types as genai_types
 import litellm
+import json
+from src.logger import logger
 
 class LiteLLMModel(BaseLlm):
     """
     Adapter for using LiteLLM supported models with Google ADK.
     """
     model: str
+    agent_name: str = "Unknown"
     
-    def __init__(self, model: str):
-         super().__init__(model=model)
+    def __init__(self, model: str, agent_name: str = "Unknown"):
+         super().__init__(model=model, agent_name=agent_name)
 
     async def generate_content_async(
         self, 
@@ -51,17 +54,54 @@ class LiteLLMModel(BaseLlm):
                 if role == "model":
                     role = "assistant"
                 
-                parts_content = ""
                 if content.parts:
-                    for part in content.parts:
-                        if part.text:
-                            parts_content += part.text
-                        # Handle other parts if needed
-                
-                messages.append({
-                    "role": role,
-                    "content": parts_content
-                })
+                    # Check for function calls or function responses
+                    has_function_call = any(hasattr(part, 'function_call') and part.function_call for part in content.parts)
+                    has_function_response = any(hasattr(part, 'function_response') and part.function_response for part in content.parts)
+                    
+                    if has_function_call:
+                        # Assistant message with tool_calls
+                        tool_calls = []
+                        for part in content.parts:
+                            if hasattr(part, 'function_call') and part.function_call:
+                                fc = part.function_call
+                                import json
+                                tool_calls.append({
+                                    "id": fc.id,
+                                    "type": "function",
+                                    "function": {
+                                        "name": fc.name,
+                                        "arguments": json.dumps(fc.args) if fc.args else "{}"
+                                    }
+                                })
+                        messages.append({
+                            "role": "assistant",
+                            "content": None,
+                            "tool_calls": tool_calls
+                        })
+                    elif has_function_response:
+                        # Tool response messages
+                        for part in content.parts:
+                            if hasattr(part, 'function_response') and part.function_response:
+                                fr = part.function_response
+                                import json
+                                messages.append({
+                                    "role": "tool",
+                                    "tool_call_id": fr.id,
+                                    "content": json.dumps(fr.response) if fr.response else ""
+                                })
+                    else:
+                        # Regular text message
+                        parts_content = ""
+                        for part in content.parts:
+                            if hasattr(part, 'text') and part.text:
+                                parts_content += part.text
+                        
+                        if parts_content:
+                            messages.append({
+                                "role": role,
+                                "content": parts_content
+                            })
         return messages
 
     
@@ -160,12 +200,14 @@ class LiteLLMModel(BaseLlm):
                 # LiteLLM/OpenAI tool call: id, type='function', function={name, arguments(str)}
                 # ADK expects FunctionCall part
                 # FunctionCall(id=..., name=..., args={...})
-                import json
                 try:
                     args = json.loads(tc.function.arguments)
                 except:
                     args = {}
                 
+                # Log tool usage
+                logger.info(f"Agent '{self.agent_name}' calling tool: {tc.function.name} with args: {args}")
+
                 parts.append(genai_types.Part(
                     function_call=genai_types.FunctionCall(
                         id=tc.id,

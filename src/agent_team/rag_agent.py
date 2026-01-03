@@ -2,7 +2,7 @@
 
 import os
 from google.adk import Agent
-from google.adk.tools import FunctionTool
+from google.adk.tools import FunctionTool, transfer_to_agent
 from src.models.litellm_model import LiteLLMModel
 
 from sqlalchemy import create_engine, text
@@ -58,13 +58,14 @@ def retriever_tool(query: str, top_k: int):
         logger.error(CustomException(e))
 
 
-def init_rag_agent(name: str, prompt: str) -> Agent:
-    model = LiteLLMModel(model=os.getenv('OPENAI_MODEL'))
+def init_rag_agent(name: str, prompt: str, description: str = "") -> Agent:
+    model = LiteLLMModel(model=os.getenv('OPENAI_MODEL'), agent_name=name)
     
     agent = Agent(
         name=name,
+        description=description or "Knowledge base agent that answers technical questions about devices and products from documentation",
         instruction=prompt,
-        tools=[FunctionTool(retriever_tool)],
+        tools=[FunctionTool(retriever_tool), FunctionTool(transfer_to_agent)],
         model=model
     )
     

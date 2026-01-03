@@ -1,5 +1,5 @@
 from google.adk import Agent
-from google.adk.tools import FunctionTool
+from google.adk.tools import FunctionTool, transfer_to_agent
 from src.models.litellm_model import LiteLLMModel
 import os
 
@@ -41,14 +41,16 @@ def run_sql_queries(query: str) -> str:
         return f"Error executing query: {e}"    
     
     
-def init_sql_agent(name: str, prompt: str) -> Agent:
-    model = LiteLLMModel(model=os.getenv("OPENAI_MODEL"))
+def init_sql_agent(name: str, prompt: str, description: str = "") -> Agent:
+    model = LiteLLMModel(model=os.getenv("OPENAI_MODEL"), agent_name=name)
     
     agent = Agent(
         name=name,
-        tools=[FunctionTool(run_sql_queries)],
+        description=description or "Database agent that retrieves information about support tickets using SQL queries",
+        tools=[FunctionTool(run_sql_queries), FunctionTool(transfer_to_agent)],
         instruction=prompt,
         model=model
     )
     
     return agent
+
