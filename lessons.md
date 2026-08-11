@@ -329,3 +329,110 @@ npm run dev                                         # http://localhost:3000
 The takeaway: both run React; Vite leaves the backend to Fastify (our plan) while Next.js would
 pull a second server-rendering layer into the project for benefits this app doesn't need. Full
 evaluation + comparison table: `docs/design/ui.md` §1.
+
+---
+
+## 10. Custom tools with `defineTool` (and what they return)
+
+A custom tool is just an object with a name, a description the model reads, a
+TypeBox parameter schema, and an `execute` function. Pass them to a session with
+`customTools: [...]`.
+
+```ts
+import { defineTool } from "@earendil-works/pi-coding-agent";
+import { Type } from "typebox";
+
+const kbSearch = defineTool({
+  name: "kb_search",
+  description: "Search the product manuals KB",
+  parameters: Type.Object({ query: Type.String({ description: "The query" }) }),
+  execute: async (_toolCallId, params, signal, _onUpdate, _ctx) => {
+    // params is type-safe from the TypeBox schema
+    signal?.throwIfAborted();                       // abort-aware
+    return {
+      content: [{ type: "text", text: "results…" }], // ← what the MODEL sees
+      details: { sources: [...], count: 3 },         // ← structured data for YOUR UI
+    };
+  },
+});
+```
+
+**Key facts (we verified against the installed SDK 0.84.1):**
+- `execute(toolCallId, params, signal, onUpdate, ctx)` — `signal` is the agent's
+  AbortSignal (propagate it to `fetch`/DB calls); `ctx` is the extension context.
+- Return shape is `AgentToolResult`: `content` (text/image parts, fed back to the
+  model) + `details` (arbitrary JSON — we put `sources` there so the SSE bridge
+  can build the `done` event's sources list).
+- **There is no `isError` field on the return value** — throw from `execute` and
+  the SDK marks the tool result as an error (`tool_execution_end.isError`).
+- `noTools: "builtin"` disables `read/bash/edit/write` while keeping custom +
+  extension tools — this is the support-session sandbox (locked rule: no
+  filesystem tools). `tools: [name]` on top of that is an explicit allowlist.
+
+## 11. Guardrails via extension hooks (interception layer)
+
+Extensions register `pi.on(event, handler)` hooks. Four of them form our
+guardrail layer — the source of truth we never trust the model/tool output over:
+
+| Hook | Fires | We do |
+|---|---|---|
+| `input` | user text arrives, before skill/template expansion | block prompt-injection patterns (`{ action: "handled" }` skips the LLM entirely); truncate oversized input (`{ action: "transform" }`) |
+| `context` | before **every** LLM call | prepend a safety system note + clamp oversized tool results |
+| `tool_call` | before a tool executes | block non-SELECT `tickets_query` args, unknown `route_to_agent` agents, suspicious web queries (`{ block: true, reason }`) |
+| `tool_result` | after a tool runs, before the model sees it | scrub PII (emails, phones, SSNs) |
+
+Return-value shapes (from `docs/extensions.md`): input → `{action:
+"continue"|"transform"|"handled"}`; context → `{messages}`; tool_call →
+`{block?, reason?}`; tool_result → `{content?, details?, isError?}`. Use
+`isToolCallEventType<"my_tool", MyInput>("my_tool", event)` to narrow custom
+tool events.
+
+**Why the safety note is a user-role message:** the in-session message union is
+`UserMessage | AssistantMessage | ToolResultMessage` — there is no `"system"`
+role in-session, so we prepend a clearly-marked user message instead.
+
+## 12. Sub-agents: `route_to_agent` spawns a child session per call
+
+pi has **no native handoffs** (ADK's `transfer_to_agent` doesn't exist here), so
+sub-agents are a custom tool that spawns a fresh `AgentSession` per call:
+
+1. `route_to_agent` tool runs → child session created with the specialist's
+   system prompt (`systemPromptOverride`) and **exactly one** custom tool.
+2. `child.prompt(query)` streams; we collect tokens, tool calls, and the final
+   answer + `details.sources`.
+3. `child.dispose()` in a `finally` — children are cheap (in-memory, no files).
+
+Guards we added: bounded concurrency (3 children max, tiny semaphore), per-child
+timeout (60s → abort), parent AbortSignal propagation, and the `tool_call` hook
+validates `agent ∈ {rag,sql,web}` **before** a child spawns.
+
+**Mock-first development:** the contract lets each track carry a local copy of
+the interface it consumes + a mock. Our `src/retrieval/index.ts` is the local
+copy (same signatures as retrieval-core's); `RETRIEVAL_MODE=mock` (default) uses
+a keyword-overlap mock KB so `npm run chat` works with zero DB. At integration
+the real module replaces it — tools don't change at all.
+
+## 13. Model selection and auth (`ModelRuntime`)
+
+`ModelRuntime.create()` resolves credentials in priority order: runtime
+overrides → `~/.pi/agent/auth.json` → env API keys → fallback resolver. Then
+`modelRuntime.getAvailable()` returns only models with valid auth. Our resolver
+picks: explicit `model` option → `PI_MODEL` env (accepts bare ids like
+`deepseek-v4-flash`) → preferred list (`claude-sonnet-4-5`, `claude-haiku-4-5`,
+`gpt-5`, …) → first available. Children reuse the same `ModelRuntime` (creating
+one per child would re-resolve auth + re-fetch the catalog each time) and prefer
+a cheap model (`PI_SPECIALIST_MODEL` or haiku/flash).
+
+---
+
+## Log (append as the project moves)
+
+- **[agent-runtime track]** Phase 6 built: `src/runtime/` (`createSupportRuntime`,
+  `noTools:"builtin"`, model resolution), `src/agent/` (supervisor + specialist
+  prompts, `route_to_agent` child-session tool with semaphore + timeout),
+  `src/tools/` (kb_search / tickets_query / web_search, mock-first),
+  `src/guardrails/` (input/context/tool_call/tool_result hooks + PII scrub).
+  `npm run chat` runs end-to-end on mock retrieval (no DB). Learned: SDK has no
+  in-session `system` role; session-level `turn_start` has no `turnIndex`;
+  DDG Lite HTML uses single-quoted attributes; throwing from `execute` marks the
+  tool result as error.

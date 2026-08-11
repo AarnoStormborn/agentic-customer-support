@@ -11,6 +11,7 @@
     "dev": "tsx watch src/server/index.ts",
     "start": "tsx src/server/index.ts",
     "spike": "tsx src/dev/spike.ts",
+    "chat": "tsx src/cli/chat.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
     "db:migrate": "tsx src/db/migrate.ts",
