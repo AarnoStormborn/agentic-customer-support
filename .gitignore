@@ -1,16 +1,26 @@
-# Python-generated files
+# --- Python (legacy) ---
 __pycache__/
 *.py[oc]
 build/
 dist/
 wheels/
 *.egg-info
-
-# Virtual environments
 .venv
-.env
 
+# --- Node / TS ---
+node_modules/
+*.tsbuildinfo
+dist/
+
+# --- Env & secrets ---
+.env
+.env.local
+
+# --- App data (provisioned, not committed) ---
+**/data/**
 explore/
 logs/
-**/data/**
 results.json
+
+# Git worktrees (parallel dev)
+.worktrees/
