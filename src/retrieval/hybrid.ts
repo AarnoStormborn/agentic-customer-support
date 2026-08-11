@@ -151,16 +151,9 @@ async function searchSql(query: string, topK: number): Promise<HybridResult[]> {
   const pool = getPool();
   const sql = `
     WITH fts AS (
-      SELECT ticket_id,
-             to_tsvector('english',
-               COALESCE(complaint_narrative, '') || ' ' ||
-               COALESCE(ticket_subject, '')   || ' ' ||
-               COALESCE(product_purchased, '')) AS tsv
+      SELECT ticket_id, search_tsv AS tsv
       FROM tickets
-      WHERE to_tsvector('english',
-               COALESCE(complaint_narrative, '') || ' ' ||
-               COALESCE(ticket_subject, '')   || ' ' ||
-               COALESCE(product_purchased, '')) @@ websearch_to_tsquery('english', $1)
+      WHERE search_tsv @@ websearch_to_tsquery('english', $1)
     ),
     ranked AS (
       SELECT ticket_id, row_number() OVER (ORDER BY ts_rank_cd(tsv, websearch_to_tsquery('english', $1)) DESC) AS rank

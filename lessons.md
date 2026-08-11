@@ -624,3 +624,36 @@ Tests run under **happy-dom** (a fast DOM implementation) with
   into later ones.
 - `vi.fn(class)` is **not constructible** with `new` — pass a real subclass
   that records its instances instead.
+
+---
+
+## 18. Scaling a Postgres search table to 3.76M rows (CFPB full dump)
+
+The CFPB full-dump ingest (3.76M rows, 8.7 GB CSV, streaming csv-parse + batched
+`INSERT ... SELECT unnest(...) ON CONFLICT`) was a real scale test. It broke things
+in exactly the order you'd expect:
+
+1. **Stale planner stats.** After a 3.76M-row insert, the planner still thought the
+   table had 8k rows and chose sequential scans. `ANALYZE tickets;` fixed estimates.
+2. **ILIKE `%...%` can't use btree.** Four OR'd `ILIKE` columns forced full scans
+   (18.7 s for `q=lg oled`). `pg_trgm` GIN indexes
+   (`gin_trgm_ops`) enable substring search via BitmapOr.
+3. **Lossy bitmaps at scale.** With default `work_mem` (4 MB) the bitmap for a
+   125k-match query exceeded memory → lossy pages → heap rechecks. `work_mem=128MB`
+   made the bitmap exact (5.2 s → 1.9 s).
+4. **Exact COUNT(*) is the wrong tool.** `count(*)` over 3.76M rows = full BitmapOr
+   heap scan. Standard fix: cap the count (`SELECT count(*) FROM (SELECT 1 ... LIMIT 10001)`),
+   return `totalCapped: true`, UI shows "10,000+".
+5. **Inline `to_tsvector(...)` in WHERE = seq scan.** The hybrid retriever computed
+   `to_tsvector('english', narrative || subject || product)` per row → 46 s. Fix: a
+   **generated column** (`search_tsv tsvector GENERATED ALWAYS AS (to_tsvector(...)) STORED`)
+   + GIN index → index scans. 46 s → 1.9 s worst case, ~45 ms typical.
+6. **Big generated-column backfills are slow** (3.76M rows × long narratives ≈ 5+ min
+   in one transaction) — run them with patience or `CREATE INDEX CONCURRENTLY`.
+
+Also learned: `websearch_to_tsquery` gives you Google-ish query syntax (`"exact phrase"`,
+`-exclude`) for free, and switches search semantics from substring to word-based — a UX
+decision, not just a perf one.
+
+**Net:** endpoint worst case 18.7 s → 0.03 s; hybrid retrieval 46 s → 1.9 s; all 65 tests
+green. The Postgres-only stack (no Elasticsearch) holds up fine at this scale.

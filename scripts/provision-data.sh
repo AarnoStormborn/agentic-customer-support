@@ -17,6 +17,15 @@ fetch() { # $1=url $2=out $3=min_bytes
 fetch "https://huggingface.co/datasets/gorkemsevinc/customer_support_tickets/resolve/main/data/train-00000-of-00001.parquet" \
       "$DATA/raw/suraj520/tickets.parquet" 1000000
 
+# 2) CFPB full dump (CC0, ~1.4 GB) + unzip (tickets table at scale, §3.3)
+fetch "https://files.consumerfinance.gov/ccdb/complaints.csv.zip" "$DATA/raw/cfpb/complaints.csv.zip" 1000000000
+if [[ ! -f "$DATA/raw/cfpb/complaints.csv" ]] || [[ "$DATA/raw/cfpb/complaints.csv.zip" -nt "$DATA/raw/cfpb/complaints.csv" ]]; then
+  echo "unzip $DATA/raw/cfpb/complaints.csv.zip"
+  unzip -o "$DATA/raw/cfpb/complaints.csv.zip" -d "$DATA/raw/cfpb/"
+else
+  echo "skip  $DATA/raw/cfpb/complaints.csv (fresh)"
+fi
+
 # 2) Manuals (verified URLs, docs/data-research.md §4 / data-management §3.2)
 #    NOTE: gscs-b2c.lge.com returned an HTML error page (not a PDF) on 2026-08-11
 #    -> using the dustin.eu retail mirror (verified 200).

@@ -50,9 +50,11 @@ export const dataRoutes: FastifyPluginAsync = async (app) => {
     let n = 1;
 
     if (q && q.trim()) {
-      const like = `%${q.trim()}%`;
-      where.push(`(product_purchased ILIKE $${n} OR ticket_subject ILIKE $${n} OR complaint_narrative ILIKE $${n} OR ticket_type ILIKE $${n})`);
-      params.push(like);
+      // FTS over the generated search_tsv column (GIN-indexed at scale).
+      // Substring ILIKE semantics were replaced by word-based FTS after the
+      // 3.76M-row scale test: 4×ILIKE OR forced seq scans (18s+).
+      where.push(`search_tsv @@ websearch_to_tsquery('english', $${n})`);
+      params.push(q.trim());
       n += 1;
     }
     if (status) {
@@ -73,6 +75,11 @@ export const dataRoutes: FastifyPluginAsync = async (app) => {
 
     const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
 
+    // Count is capped at 10k: exact counts over millions of rows force a full
+    // BitmapOr heap scan (~1-2s at 3.76M rows). The UI shows "10,000+" when
+    // totalCapped is true (scale tuning, Phase 5b.3).
+    const COUNT_CAP = 10_000;
+
     const pool = getPool();
     const [rowsRes, countRes] = await Promise.all([
       pool.query(
@@ -81,15 +88,22 @@ export const dataRoutes: FastifyPluginAsync = async (app) => {
                 complaint_narrative, company, status, is_synthetic, created_at
          FROM tickets ${whereSql}
          ORDER BY ticket_id DESC
-         LIMIT $${n} OFFSET $${n + 1}`,
+         LIMIT $${n}::int OFFSET $${n + 1}::int`,
         [...params, pageSize, offset],
       ),
-      pool.query(`SELECT COUNT(*)::int AS total FROM tickets ${whereSql}`, params),
+      pool.query(
+        `SELECT count(*)::int AS total FROM (
+           SELECT 1 FROM tickets ${whereSql} LIMIT $${n}::int
+         ) t`,
+        [...params, COUNT_CAP],
+      ),
     ]);
 
+    const total = countRes.rows[0]?.total ?? 0;
     return {
       rows: rowsRes.rows,
-      total: countRes.rows[0]?.total ?? 0,
+      total,
+      totalCapped: total >= COUNT_CAP,
       page,
       pageSize,
     };
