@@ -13,6 +13,8 @@
     remove the python requirement entirely.
 - Reconciliation: merge the three tracks' `package.json` carefully; this track's
   additions are scripts only, no version conflicts expected.
+
+---
 # DEPS — dependency & env notes (agent-runtime track)
 
 ## npm dependencies
@@ -42,6 +44,8 @@ Web search (Tavily + DuckDuckGo) uses `fetch` (Node ≥ 22), no HTTP client dep.
   just let the merged module take over (it bypasses the mock switch entirely).
 - `SQL_MODE=real` + `SQL_IMPL=<path to src/db/pool.ts>` switches tickets_query to
   Postgres (read-only transaction, 1s statement timeout).
+
+---
 # DEPS.md — new dependencies per track (orchestrator reconciles at integration)
 
 Track branches: `retrieval-core` · `agent-runtime` · `api-streaming`.

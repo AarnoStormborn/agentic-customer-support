@@ -146,7 +146,7 @@ The UI design agent will make a concrete recommendation (Phase 4.4).
 
 ---
 
-## 10. Retrieval-core implementation lessons (what you just learned by building it)
+## 8. Retrieval-core implementation lessons (what you just learned by building it)
 
 ### 10.1 Reciprocal Rank Fusion (RRF) — fuse ranks, not scores
 
@@ -231,7 +231,7 @@ converge).
 
 ---
 
-## 8. Why Fastify won (backend framework decision)
+## 9. Why Fastify won (backend framework decision)
 
 A web framework is the Node equivalent of Flask/FastAPI in Python: it routes URLs to handler
 functions and gives you middleware (code that runs on every request). We compared four:
@@ -276,7 +276,7 @@ Sources: [betterstack](https://betterstack.com/community/guides/scaling-nodejs/f
 
 ---
 
-## 9. React + Vite vs Next.js (the UI decision)
+## 10. React + Vite vs Next.js (the UI decision)
 
 You know React. The question was never "which UI library" — it's **how the app gets built and
 served**. Two ways to run React in production:
@@ -332,7 +332,7 @@ evaluation + comparison table: `docs/design/ui.md` §1.
 
 ---
 
-## 10. Custom tools with `defineTool` (and what they return)
+## 11. Custom tools with `defineTool` (and what they return)
 
 A custom tool is just an object with a name, a description the model reads, a
 TypeBox parameter schema, and an `execute` function. Pass them to a session with
@@ -369,7 +369,7 @@ const kbSearch = defineTool({
   extension tools — this is the support-session sandbox (locked rule: no
   filesystem tools). `tools: [name]` on top of that is an explicit allowlist.
 
-## 11. Guardrails via extension hooks (interception layer)
+## 12. Guardrails via extension hooks (interception layer)
 
 Extensions register `pi.on(event, handler)` hooks. Four of them form our
 guardrail layer — the source of truth we never trust the model/tool output over:
@@ -391,7 +391,7 @@ tool events.
 `UserMessage | AssistantMessage | ToolResultMessage` — there is no `"system"`
 role in-session, so we prepend a clearly-marked user message instead.
 
-## 12. Sub-agents: `route_to_agent` spawns a child session per call
+## 13. Sub-agents: `route_to_agent` spawns a child session per call
 
 pi has **no native handoffs** (ADK's `transfer_to_agent` doesn't exist here), so
 sub-agents are a custom tool that spawns a fresh `AgentSession` per call:
@@ -412,7 +412,7 @@ copy (same signatures as retrieval-core's); `RETRIEVAL_MODE=mock` (default) uses
 a keyword-overlap mock KB so `npm run chat` works with zero DB. At integration
 the real module replaces it — tools don't change at all.
 
-## 13. Model selection and auth (`ModelRuntime`)
+## 14. Model selection and auth (`ModelRuntime`)
 
 `ModelRuntime.create()` resolves credentials in priority order: runtime
 overrides → `~/.pi/agent/auth.json` → env API keys → fallback resolver. Then
@@ -436,3 +436,69 @@ a cheap model (`PI_SPECIALIST_MODEL` or haiku/flash).
   in-session `system` role; session-level `turn_start` has no `turnIndex`;
   DDG Lite HTML uses single-quoted attributes; throwing from `execute` marks the
   tool result as error.
+
+---
+
+## 15. API + streaming implementation (api-streaming track)
+
+**Fastify plugins = small modular apps.** Everything in Fastify is a plugin — CORS, SSE,
+WebSocket, rate-limit are each one `app.register(plugin, opts)` call. A plugin registered
+with `register` gets its own encapsulated scope: hooks/decorators inside it only affect
+routes registered under it. That's why `fastify-plugin` wraps most official plugins —
+it marks them "apply at root" so e.g. the SSE `onRoute` hook sees every route.
+
+**`@fastify/sse` in three facts** (this bit us — read these before using it):
+1. `sse: "only"` on a route makes the handler stream-only; `reply.sse.send({id,event,data})`
+   writes one SSE frame. `id` is what the browser echoes back as `Last-Event-ID` on reconnect.
+2. The connection only stays open **once the response is committed as SSE** — call
+   `reply.sse.sendHeaders()` (+ `keepAlive()`) first thing, or a handler that hasn't written
+   anything returns normally and Fastify sends an empty 200 and closes.
+3. The plugin's `reply.sse.replay(cb)` only fires **when a `Last-Event-ID` header exists**
+   (i.e. reconnects). First-time clients get nothing — so replay the ring buffer manually.
+   Heartbeat comments (`: ping`) are built in via `heartbeatInterval` — keeps proxies from
+   killing idle streams.
+
+**Ring buffer for replay.** Keep the last N events per chat in an array (cap at 200); on
+connect, send everything with `id > Last-Event-ID`. It's how a client that dropped mid-turn
+re-catches up without missing tokens. Cost: O(N) memory per chat — trivial at this scale.
+
+**Rate limiting vs connection caps.** `@fastify/rate-limit` counts *requests per minute per
+IP* — perfect for POST /api/chat (10/min) and reads (30/min). It's wrong for SSE/WebSocket:
+those are one long-lived request, so you cap *concurrent connections per IP* (we use 5) with
+your own counter instead, and set `config: { rateLimit: false }` on those routes.
+
+**BullMQ needs `maxRetriesPerRequest: null`.** BullMQ uses Redis blocking commands
+(BRPOPLPUSH). ioredis by default retries failed commands and would throw "Reached the max
+retries" on blocked calls — setting `maxRetriesPerRequest: null` on the connection is the
+documented BullMQ requirement. Queue (producer) and Worker (consumer) each get their own
+ioredis connection.
+
+**MCP in 5 lines.** The Model Context Protocol lets an LLM call your tools over JSON-RPC.
+With `@modelcontextprotocol/sdk`: create `McpServer`, `server.registerTool(name, {description,
+inputSchema: { query: z.string() }}, handler)`, connect a `StdioServerTransport` — done.
+`npm run mcp` runs it; logs go to stderr so stdout stays protocol-clean.
+
+**CJS/ESM interop gotcha (`verbatimModuleSyntax`).** Many Fastify plugins are CommonJS
+packages whose types use `export default`. Under `verbatimModuleSyntax` + NodeNext, TS types
+the default import as the *module namespace* (`typeof import(...)`) — not the plugin function
+— so `app.register(sse, …)` fails to typecheck even though it works at runtime. Fix: cast
+`const sse = sseModule as unknown as FastifyPluginAsync<…>`. One-liner, but confusing the
+first time.
+
+**Mock-driven parallel development.** Three tracks build against a written contract
+(`docs/design/integration-contract.md`). This track ships a local mock of the runtime
+(`src/runtime/mock.ts`) that emits a believable SDK event sequence — so the whole SSE/WS
+pipeline is testable end-to-end before the real agent exists. Integration = swap one import.
+That's the pattern: interface + mock + one swap point, verified by `tsc --noEmit` after merge.
+
+---
+
+### 7b. Log — api-streaming track
+
+- **[api-streaming impl]** Built `src/server/` (Fastify: cors, sse, websocket, rate-limit,
+  pino), `src/streaming/` (registry + ring buffer, SDK→SSE bridge, SSE + WS handlers),
+  `src/queue/` (BullMQ jobs + stub worker), `src/mcp/` (kb_search/tickets_query scaffold),
+  `src/runtime/mock.ts` (mock SupportRuntime). `npm run dev` on :8000; /health reports
+  Postgres+Redis; POST /api/chat → SSE streams the full mock turn; rate limit 429s after
+  burst; WS steer/cancel frames work; MCP initializes over stdio. Details:
+  `CONTRACT-NOTES.md` (integration notes) + `DEPS.md` (new deps).
