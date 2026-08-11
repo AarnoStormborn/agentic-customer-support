@@ -25,13 +25,15 @@
 | Task queue | **BullMQ + Redis** |
 | Guardrails | pi extension interception hooks: `input`, `context`, `tool_call`, `tool_result` |
 | Security | SQL is **read-only allowlist** (SELECT-only, parameterized); no secrets in code (`.env` only); no bash/read/write tools in support sessions |
+| Auth & rate limits | **No authentication** (learner project). **Rate limiting is mandatory**: `@fastify/rate-limit` per-IP on chat/steer/cancel/tasks, per-session turn/token caps, connection caps on SSE/WS |
+| Tickets schema | **Rebuilt from scratch** (owner decision) — nothing carried from v1 `schema.yml`; sources: suraj520 + CFPB **full dump** + Comcast |
 
-## Open decisions (currently being designed — see `docs/plan.md` Phase 3)
+## Resolved decisions (owner, 2026-08 — do not reopen)
 
-- Backend web framework: Fastify vs Express vs NestJS vs Hono (**evaluate, recommend one**)
-- UI framework: React (owner knows it) vs Next.js vs Vite+React SPA (**evaluate, recommend one**)
-- Retrieval specifics: hybrid fusion (RRF), reranker choice, embedding model, chunking strategy
-- Dataset bundle: from `docs/data-research.md` (owner defers provisioning)
+- No auth; solid rate limiting instead (see stack table).
+- CFPB: full dump (~2.9M rows), filter at ingest time.
+- Tickets schema: fresh design, no v1 field carryover.
+- Implementation order approved: retrieval → agent runtime → API/streaming → queue+MCP → UI → Docker/tests.
 
 ## Architecture rules (design constraints — honor them)
 

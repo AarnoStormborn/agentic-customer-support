@@ -236,6 +236,21 @@ Optional extras we'll emit when present (cheap, aids the UI): `thinking` (thinki
 - **WS**: same event feed as SSE plus inbound `{ type: "steer"|"cancel", ... }` frames —
   one transport for clients that want full duplex (mobile app, advanced UI).
 
+### 2.5 Security posture (owner decisions — locked)
+
+- **No authentication.** This is a learner project, not a user platform — no login, no tokens,
+  no user accounts. API is open on the dev host.
+- **Solid rate limiting is REQUIRED** (owner). Per-IP limits on all mutating/chat endpoints:
+  - `@fastify/rate-limit` on `POST /api/chat`, `POST /api/chat/:id/steer|cancel`, `POST /api/tasks`
+    — e.g. 10 req/min/IP for chat, 30 req/min/IP for reads (`GET /api/tickets*`, `GET /api/manuals*`).
+  - Per-session guard: max tokens per turn / max turns per session enforced in the agent runtime
+    (protects against runaway loops and large-context abuse).
+  - SSE/WS connections are cheap to open but long-lived: cap concurrent connections per IP
+    (e.g. 5) via `@fastify/websocket` options + an SSE connection counter.
+- **Never expose filesystem tools** to the support agent (locked in AGENTS.md).
+- Database access stays read-only for the app role + separate `acs_readonly` role for the SQL tool
+  (§4.6).
+
 ---
 
 ## 3. Agent loop design (pi agents SDK)
@@ -765,7 +780,9 @@ src/
 
 ### 5.3 Open items (owner review)
 
-- UI framework decision (Phase 3.5/4.4 — separate design doc) affects CORS/deploy only.
+- **Resolved (owner, 2026-08):** no auth, rate limiting required (§2.5); UI framework =
+  React+Vite SPA (`docs/design/ui.md`); CFPB = full dump; tickets schema rebuilt from scratch
+  (`docs/design/data-management.md`).
 - MCP server export of retrieval tools (Phase 8) — scaffolded in `src/mcp/`, not built now.
 - Durable turn orchestration across server restarts — deferred; documented in §3.5.
 - Late chunking / bge-m3 / pg_search: eval-gated upgrades, not v2 scope.

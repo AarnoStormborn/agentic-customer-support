@@ -37,7 +37,12 @@ Baselines extended here: legacy `config/schema.yml`, `config/ingest.py`, `config
 - Vector dimension **1536** (OpenAI `text-embedding-3-small`, the model used by legacy `ingest.py`); changing the model ⇒ new column/dimension + re-embed (see §6).
 - Legacy equivalent tables (`t_docs`, `t_docs_chunks`, `config/sql/pgvector.sql`) are superseded; v2 names below are canonical.
 
-### 2.2 DDL — `tickets` (extends legacy `schema.yml` fields)
+### 2.2 DDL — `tickets` (rebuilt from scratch — owner decision: nothing carried from v1)
+
+> Owner decision 2026-08: the schema is a **fresh design**, not an extension of legacy
+> `config/schema.yml`. Field names/types are chosen for the sources we ingest (suraj520,
+> CFPB full dump, Comcast); values stay compatible with those sources. v1 fields are
+> reference-only in `docs/learnings.md`.
 
 ```sql
 CREATE EXTENSION IF NOT EXISTS pg_trgm;          -- optional, for LIKE/narrative search
@@ -47,7 +52,7 @@ CREATE TABLE tickets (
     -- provenance (idempotency key)
     source              TEXT NOT NULL,            -- 'suraj520' | 'cfpb' | 'comcast' | ...
     source_ticket_id    TEXT NOT NULL,            -- natural key from source; suraj520: md5(email||product||narrative)
-    -- legacy schema.yml fields
+    -- v2 core fields (no v1 carryover)
     customer_name       TEXT,                     -- suraj520: derived from email; cfpb/comcast: NULL (no PII published)
     customer_email      TEXT,                     -- cfpb/comcast: NULL
     customer_age        INT  CHECK (customer_age BETWEEN 0 AND 120),   -- suraj520: synthesized
@@ -216,18 +221,31 @@ fetch "https://archive.org/download/Kenmore_25331115308_Refrigerator_User_Manual
 echo "Google Pixel: download PDF from https://www.manualslib.com/manual/2876995/Google-Pixel-7.html (Download button) -> $DATA/manuals/google_pixel_7_manual.pdf"
 ```
 
-### 3.3 CFPB subset (narrative-only, keeps demo sizes sane)
+### 3.3 CFPB — FULL dump ingestion (owner decision: scale to large datasets)
 
-The full 1.41 GB dump is downloaded once; a filter step (`scripts/filter-cfpb.mjs`, zero deps or `pg-query`-free csv parser) produces `config/data/tickets/cfpb_narratives.csv`:
-- keep rows where `Consumer complaint narrative` is non-empty (only a minority of complaints publish a narrative),
-- optional narrower window: `Date received >= 2023-01-01` and `Product` in (`Credit card or prepaid card`, `Checking or savings account`, `Bank account or service`),
-- expected output: **~5k–50k rows** depending on filters; snapshot date pinned for reproducibility.
+> Owner decision 2026-08: ingest the **full dump (~2.9M complaints)**, not a filtered subset.
+> This is the project's large-data training ground (indexing, streaming ingestion, hybrid
+> search at scale, query performance). Filtering happens at **ingest time**, not provision time.
 
-**Verified constraint:** the CFPB search UI and `search/api/v1` endpoint are behind Akamai bot protection (scripted access returns 403 "Access Denied" from datacenter IPs). The static `files.consumerfinance.gov/ccdb/complaints.csv.zip` works with plain `curl` (HEAD verified). The HF loader `CFPB/consumer-finance-complaints` pulls the same static file (but runs arbitrary loader code — prefer the direct zip + local filter).
+The full 1.41 GB zip is downloaded once by `scripts/provision-data.sh`; ingestion
+(`scripts/ingest-cfpb.mjs` or the BullMQ ingest job) then:
+- streams the CSV (no full-file load; e.g. `csv-parse` streaming + batched `COPY`/bulk insert),
+- normalizes columns to the `tickets` schema (Complaint ID → `source_ticket_id`, Date received
+  → `date_of_purchase`, Product/Issue → `product_purchased`/`ticket_type`, Submitted via →
+  `ticket_channel`, Company → new `company` column, narrative → `complaint_narrative`),
+- keeps **all** rows (narrative optional — `NULL` where unpublished; PII already scrubbed by CFPB),
+- expected volume: **~2.9M rows** (~1–2 GB table, fits comfortably in Postgres; plan batching
+  + indexes after load — see §5 for the batching note).
+
+**Verified constraint:** the CFPB search UI and `search/api/v1` endpoint are behind Akamai bot
+protection (scripted access returns 403 from datacenter IPs). The static
+`files.consumerfinance.gov/ccdb/complaints.csv.zip` works with plain `curl` (HEAD verified).
+The HF loader `CFPB/consumer-finance-complaints` pulls the same static file (but runs arbitrary
+loader code — prefer the direct zip + local stream).
 
 ### 3.4 Verification & `.gitignore`
 
-- **Expected sizes (verify after provisioning):** `du -sh config/data/raw config/data/manuals` → raw ≈ 1.41 GB (mostly CFPB zip), manuals ≈ 50 MB; row counts: suraj520 8,469 (verify with `python3 -c "import pandas as pd; print(len(pd.read_parquet('config/data/raw/suraj520/tickets.parquet')))"` or `node` + `parquetjs`), Comcast 2,224 lines, CFPB subset 5k–50k.
+- **Expected sizes (verify after provisioning):** `du -sh config/data/raw config/data/manuals` → raw ≈ 1.41 GB (CFPB full zip), manuals ≈ 50 MB; row counts: suraj520 8,469, Comcast 2,224 lines, **CFPB ~2.9M rows** (full dump; narrative optional per row).
 - **`.gitignore` strategy:**
   - Root `.gitignore`: add `config/data/` (covers `raw/`, `tickets/`, `manuals/`).
   - Commit `config/data/.gitignore` containing `*` and `!.gitkeep` so the directory skeleton (and this doc's layout) survives clones while data never enters git.
