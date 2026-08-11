@@ -21,3 +21,6 @@ dist/
 explore/
 logs/
 results.json
+
+# Git worktrees (parallel dev)
+.worktrees/
