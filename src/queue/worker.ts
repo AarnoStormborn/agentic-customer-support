@@ -8,6 +8,11 @@
 import { Worker, type Job } from "bullmq";
 import type { FastifyBaseLogger } from "fastify";
 import { QUEUE_NAME, redisConnection, type TaskPayload } from "./jobs.js";
+import {
+  handleIngestDocument,
+  handleIngestTickets,
+  handleReembed,
+} from "./handlers.js";
 
 export interface WorkerHandlers {
   ingestDocument?(payload: TaskPayload & { type: "ingest.document" }): Promise<unknown>;
@@ -15,11 +20,18 @@ export interface WorkerHandlers {
   reembed?(payload: TaskPayload & { type: "reembed" }): Promise<unknown>;
 }
 
+/** Default handlers = the real ingest pipelines (Phase 5b.2). */
+export const defaultHandlers: WorkerHandlers = {
+  ingestDocument: async (task) => handleIngestDocument(task.payload),
+  ingestTickets: async (task) => handleIngestTickets(task.payload),
+  reembed: async (task) => handleReembed(task.payload),
+};
+
 /**
- * Start the worker. Stub handlers log + ack; replace via `handlers` at integration.
+ * Start the worker. Defaults to the real ingest handlers; tests inject stubs.
  * Returns the Worker so the caller can `close()` it on shutdown.
  */
-export function startWorker(logger: FastifyBaseLogger, handlers: WorkerHandlers = {}): Worker {
+export function startWorker(logger: FastifyBaseLogger, handlers: WorkerHandlers = defaultHandlers): Worker {
   const worker = new Worker(
     QUEUE_NAME,
     async (job: Job) => {
@@ -29,28 +41,18 @@ export function startWorker(logger: FastifyBaseLogger, handlers: WorkerHandlers 
       switch (task.type) {
         case "ingest.document":
           if (handlers.ingestDocument) return handlers.ingestDocument(task);
-          // Stub: real handler lands after integration (retrieval-core ingest).
-          logger.info(
-            { jobId: job.id, path: task.payload.path },
-            "[stub] ingest.document would chunk + embed + upsert this manual",
-          );
-          return { handled: true, stub: "ingest.document" };
+          logger.warn({ jobId: job.id }, "ingest.document handler missing");
+          return { handled: false };
 
         case "ingest.tickets":
           if (handlers.ingestTickets) return handlers.ingestTickets(task);
-          logger.info(
-            { jobId: job.id, source: task.payload.source },
-            "[stub] ingest.tickets would load this dataset into tickets",
-          );
-          return { handled: true, stub: "ingest.tickets" };
+          logger.warn({ jobId: job.id }, "ingest.tickets handler missing");
+          return { handled: false };
 
         case "reembed":
           if (handlers.reembed) return handlers.reembed(task);
-          logger.info(
-            { jobId: job.id, model: task.payload.model ?? "target" },
-            "[stub] reembed would re-embed stale chunks",
-          );
-          return { handled: true, stub: "reembed" };
+          logger.warn({ jobId: job.id }, "reembed handler missing");
+          return { handled: false };
 
         default:
           logger.warn({ jobId: job.id, type: (task as { type?: string })?.type }, "unknown task type");

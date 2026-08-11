@@ -304,7 +304,7 @@ export async function ingestManuals(dir: string, opts: ManualsOptions = {}): Pro
         continue;
       }
 
-      const docId = await upsertDocument(parsed);
+      const docId = await upsertDocument({ ...parsed, filePath: file });
       const embeddings = await embedTexts(chunks.map((c) => c.text));
       await upsertChunks(docId, chunks, embeddings);
       docsTotal++;

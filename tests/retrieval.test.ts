@@ -97,4 +97,29 @@ describe("searchHybrid (integration — requires live DB)", () => {
     expect(results[0]!.source.type).toBe("sql");
     expect(results[0]!.source.row).toBeTruthy();
   });
+
+  run("ingestManuals is idempotent across runs with different path forms (file_path canonicalized to basename)", async () => {
+    // Regression: UNIQUE(file_path) missed when one run passed a relative path and
+    // another an absolute one, duplicating every document + chunk.
+    const { ingestManuals } = await import("../src/retrieval/ingest.js");
+    const { getPool } = await import("../src/db/pool.js");
+    const pool = getPool();
+    const before = await pool.query("SELECT count(*)::int AS n FROM documents");
+
+    const dir = "config/data/manuals";
+    const only = "lg_oled_55b9pla.pdf";
+    await ingestManuals(dir, { only });
+    const after1 = await pool.query("SELECT count(*)::int AS n FROM documents");
+    // second run with an absolute path — same logical doc, must not duplicate
+    await ingestManuals(requireAbs(dir), { only });
+    const after2 = await pool.query("SELECT count(*)::int AS n FROM documents");
+
+    expect(after1.rows[0].n).toBeGreaterThanOrEqual(before.rows[0].n);
+    expect(after2.rows[0].n).toBe(after1.rows[0].n);
+  });
 });
+
+/** Absolute-path helper for the idempotency regression test. */
+function requireAbs(p: string): string {
+  return /^\//.test(p) ? p : `${process.cwd()}/${p}`;
+}
