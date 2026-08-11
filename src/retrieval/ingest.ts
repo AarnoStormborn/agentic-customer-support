@@ -211,6 +211,17 @@ const TICKET_TS = [
 
 export async function ingestTickets(source: TicketSource, opts: IngestOptions = {}): Promise<IngestSummary> {
   const dryRun = opts.dryRun ?? false;
+
+  if (source === "cfpb") {
+    // Full-dump streaming ingest (data-management §3.3) — 2.9M rows.
+    const csvPath = "config/data/raw/cfpb/complaints.csv";
+    if (!dryRun) await preflight("tickets");
+    const { ingestCfpbCsv } = await import("./ingest-cfpb.js");
+    const summary = await ingestCfpbCsv(csvPath);
+    log(`cfpb done: ${summary.rowsRead} rows (${summary.rowsInserted} inserted, ${summary.rowsUpdated} updated, ${summary.failures.length} failures)`);
+    return { ...summary, embeddingMode: embeddingsEnabled() ? "openai" : "hash" };
+  }
+
   if (source !== "suraj520") {
     throw new Error(`ingestTickets("${source}") not implemented yet — provision ${source} raw data and add a mapper (contract API preserved)`);
   }
@@ -304,7 +315,7 @@ export async function ingestManuals(dir: string, opts: ManualsOptions = {}): Pro
         continue;
       }
 
-      const docId = await upsertDocument(parsed);
+      const docId = await upsertDocument({ ...parsed, filePath: file });
       const embeddings = await embedTexts(chunks.map((c) => c.text));
       await upsertChunks(docId, chunks, embeddings);
       docsTotal++;

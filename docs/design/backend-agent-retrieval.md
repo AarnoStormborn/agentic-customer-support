@@ -247,7 +247,7 @@ Optional extras we'll emit when present (cheap, aids the UI): `thinking` (thinki
     (protects against runaway loops and large-context abuse).
   - SSE/WS connections are cheap to open but long-lived: cap concurrent connections per IP
     (e.g. 5) via `@fastify/websocket` options + an SSE connection counter.
-- **Never expose filesystem tools** to the support agent (locked in AGENTS.md).
+- **Never expose filesystem tools** to the support agent (locked project decision).
 - Database access stays read-only for the app role + separate `acs_readonly` role for the SQL tool
   (§4.6).
 
@@ -255,7 +255,7 @@ Optional extras we'll emit when present (cheap, aids the UI): `thinking` (thinki
 
 ## 3. Agent loop design (pi agents SDK)
 
-All SDK imports live in `src/runtime/` (AGENTS.md rule). API verified against installed
+All SDK imports live in `src/runtime/` (project rule). API verified against installed
 `@earendil-works/pi-coding-agent@0.84.1` (`docs/sdk.md`, `docs/extensions.md`,
 `examples/sdk/03-custom-prompt.ts`, `05-tools.ts`, `13-session-runtime.ts`).
 
@@ -755,7 +755,7 @@ src/
 
 | Package | Version | Why |
 |---|---|---|
-| `@earendil-works/pi-coding-agent` | **0.84.1 (exact pin)** | agent runtime (AGENTS.md: pin exact; SDK pre-1.0) |
+| `@earendil-works/pi-coding-agent` | **0.84.1 (exact pin)** | agent runtime (project rule: pin exact; SDK pre-1.0) |
 | `@earendil-works/pi-ai` | pin to match 0.84.1 | `getModel`, model catalogs |
 | `fastify` | ^5.11.3 | recommended framework |
 | `@fastify/sse` | ^0.6.0 | SSE streaming + Last-Event-ID replay |

@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     date_of_purchase    DATE,
     ticket_type         TEXT NOT NULL,
     ticket_priority     TEXT CHECK (ticket_priority IN ('Critical','High','Medium','Low')),
-    ticket_channel      TEXT CHECK (ticket_channel IN ('Social Media','Email','Phone','Chat')),
+    ticket_channel      TEXT,  -- suraj520 enum (Social Media/Email/Phone/Chat) or CFPB (Web/Postal mail/Referral/Fax)
     -- extensions
     ticket_subject      TEXT,
     complaint_narrative TEXT,
@@ -41,8 +41,19 @@ CREATE TABLE IF NOT EXISTS tickets (
     is_synthetic        BOOLEAN NOT NULL DEFAULT FALSE,
     created_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
-    UNIQUE (source, source_ticket_id)
+    UNIQUE (source, source_ticket_id),
+    -- generated FTS vector for indexed search at scale (Phase 5b.3: inline
+    -- to_tsvector over 3.76M rows was a 46s seq scan; GIN makes it ms)
+    search_tsv tsvector GENERATED ALWAYS AS (
+      to_tsvector('english',
+        COALESCE(complaint_narrative, '') || ' ' ||
+        COALESCE(ticket_subject, '')   || ' ' ||
+        COALESCE(product_purchased, ''))
+    ) STORED
 );
+
+-- GIN full-text index (tickets search + hybrid retrieval sql source)
+CREATE INDEX IF NOT EXISTS tickets_search_tsv_gin_idx ON tickets USING gin (search_tsv);
 
 -- btree indexes for the SQL agent's typical filter/group patterns
 CREATE INDEX IF NOT EXISTS tickets_priority_idx      ON tickets (ticket_priority);

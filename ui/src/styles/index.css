@@ -1,0 +1,99 @@
+/* styles/index.css — Tailwind v4 (CSS-first). Tokens from ui.md §4.2. */
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/* Design tokens (dark-first). Utilities: bg-canvas, text-text-dim, …  */
+/* ------------------------------------------------------------------ */
+@theme {
+  --color-canvas: #0f1115;
+  --color-surface: #16181d;
+  --color-surface-2: #1e2128;
+  --color-border: #2a2e37;
+  --color-accent: #6366f1;
+  --color-accent-soft: #e0e7ff;
+  --color-text: #e4e7ec;
+  --color-text-dim: #8a919e;
+  --color-ok: #34d399;
+  --color-warn: #fbbf24;
+  --color-danger: #f87171;
+
+  --font-sans: ui-sans-serif, system-ui, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "JetBrains Mono", monospace;
+
+  --shadow-panel: 0 4px 24px rgb(0 0 0 / 0.35);
+}
+
+/* Light mode = token swap on <html class="light"> (dark default per ui.md). */
+.light {
+  --color-canvas: #f6f7f9;
+  --color-surface: #ffffff;
+  --color-surface-2: #eef0f3;
+  --color-border: #d9dde4;
+  --color-text: #1b1f27;
+  --color-text-dim: #5b6472;
+  --color-accent-soft: #eef0ff;
+  --shadow-panel: 0 4px 24px rgb(15 17 21 / 0.12);
+}
+
+/* Font size preference (Settings) — scales the root rem. */
+html[data-font-size="sm"] { font-size: 14px; }
+html[data-font-size="lg"] { font-size: 18px; }
+
+@layer base {
+  body {
+    @apply bg-canvas text-text font-sans antialiased;
+  }
+  ::selection {
+    background: color-mix(in srgb, var(--color-accent) 40%, transparent);
+  }
+  /* Slim dark scrollbars */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-border) transparent;
+  }
+  *::-webkit-scrollbar { width: 8px; height: 8px; }
+  *::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 8px; }
+}
+
+/* Streaming caret (blinking) — ui.md §2.2 */
+@keyframes caret-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.animate-caret {
+  animation: caret-blink 1s step-start infinite;
+  color: var(--color-accent);
+}
+
+/* Markdown body (assistant bubbles) */
+.md-body {
+  @apply text-[15px] leading-relaxed;
+}
+.md-body p { @apply my-2; }
+.md-body h1, .md-body h2, .md-body h3, .md-body h4 {
+  @apply mt-4 mb-2 font-semibold text-[15px];
+}
+.md-body ul { @apply my-2 list-disc pl-5; }
+.md-body ol { @apply my-2 list-decimal pl-5; }
+.md-body li { @apply my-1; }
+.md-body a { @apply text-accent underline underline-offset-2; }
+.md-body code {
+  @apply rounded bg-surface-2 px-1.5 py-0.5 font-mono text-[13px] text-accent-soft;
+}
+.md-body pre {
+  @apply my-3 overflow-x-auto rounded-lg border border-border bg-canvas p-3;
+}
+.md-body pre code {
+  @apply bg-transparent p-0 text-text;
+}
+.md-body table {
+  @apply my-3 w-full border-collapse text-[13px];
+}
+.md-body th, .md-body td {
+  @apply border border-border px-2 py-1 text-left;
+}
+.md-body th { @apply bg-surface-2; }
+.md-body blockquote {
+  @apply my-2 border-l-2 border-accent pl-3 text-text-dim;
+}
+.md-body hr { @apply my-4 border-border; }

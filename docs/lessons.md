@@ -134,7 +134,8 @@ The UI design agent will make a concrete recommendation (Phase 4.4).
 ## 7. Log (append as the project moves)
 
 - **[v2 kickoff]** Chose pi SDK in-process (option A) → Node/TS project. Fastify + React/Next.js
-  pending design validation. `AGENTS.md` created so rules persist across sessions.
+  pending design validation. `AGENTS.md` created so rules persist across sessions
+  (removed 2026-08 by owner; the decisions live in `docs/plan.md` + `docs/design/consolidated.md`).
 - **[backend design]** Phase 3.1–3.3 design landed: **Fastify** chosen over Express/NestJS/Hono
   (SSE plugin + speed + TS). Agent loop: `route_to_agent` custom tool spawning child sessions;
   guardrails via `input`/`context`/`tool_call`/`tool_result` hooks. Retrieval: pgvector `<=>` +
@@ -526,3 +527,134 @@ That's the pattern: interface + mock + one swap point, verified by `tsc --noEmit
 - **Silent guardrail blocks hang SSE streams** — when the `input` hook returns `handled`,
   the agent never runs and no terminal event fires. Detect no-op (message count unchanged)
   and emit `error: guardrail_blocked`.
+
+## 17. Building the web UI (Vite + React + Tailwind v4 + zustand)
+
+### 17.1 Vite dev proxy — why the UI never needs CORS
+
+The Fastify API runs on `:8000`, Vite on `:5173`. Instead of enabling CORS and
+hard-coding an absolute API URL in every `fetch`, the dev server **forwards
+same-origin paths** to the backend:
+
+```ts
+// ui/vite.config.ts
+server: {
+  port: 5173,
+  proxy: { "/api": { target: "http://localhost:8000", changeOrigin: true },
+           "/health": { target: "http://localhost:8000", changeOrigin: true } },
+}
+```
+
+The browser calls `/api/...` on the Vite origin; Vite relays it to Fastify.
+Production can either serve the built `dist/` from Fastify (`@fastify/static`)
+or set `VITE_API_URL` for a remote API. Mind the **exact route prefix**: the
+backend's health route is `/health`, not `/api/health` — `/api/health` 404s
+(we hit that during verification).
+
+### 17.2 Tailwind v4 — CSS-first theming (no tailwind.config.js)
+
+v4 moved configuration into CSS. Design tokens become CSS custom properties in
+a `@theme` block, and every utility is generated from them:
+
+```css
+@theme {
+  --color-canvas: #0f1115;   /* → bg-canvas, text-canvas, border-canvas… */
+  --color-accent: #6366f1;   /* → bg-accent, text-accent … */
+}
+```
+
+Dark-first + light mode = **swap the variables** on a class, no `dark:` variants:
+
+```css
+.light { --color-canvas: #f6f7f9; --color-surface: #ffffff; … }
+```
+
+Most online tutorials show v3's `tailwind.config.js` — for v4 read the
+[CSS-first docs](https://tailwindcss.com/docs/styling-with-utility-classes).
+
+### 17.3 EventSource (SSE) vs WebSocket — and why tokens use SSE
+
+- **SSE (EventSource)** is one-way server→client over plain HTTP with **typed
+  `event:` names**, **auto-reconnect**, and **`Last-Event-ID` replay** — if the
+  connection drops, the browser reconnects and the server re-sends missed
+  events. Perfect for token/tool streaming (the chat's hot path).
+- **WebSocket** is full-duplex (client→server steering, presence) but you hand-
+  roll reconnect, backoff, and message framing.
+- This backend exposes cancel/steer over plain REST (`POST .../cancel`,
+  `.../steer`) — so the UI uses **zero WebSockets** (the design doc's `/ws`
+  never landed). One wrapper (`ui/src/lib/sse.ts`) registers a listener per
+  event type and dispatches parsed JSON into the store. Testing trick: the
+  `EventSource` constructor is injectable, so tests pass a fake class.
+
+### 17.4 zustand — stores without providers, updates without re-render storms
+
+`create<State>()((set, get) => ({ … }))` gives a store readable anywhere via a
+hook. Two habits that mattered:
+
+- **Selectors** — `useChatStore((s) => s.messages)` subscribes a component to
+  only that slice, so 60 Hz token updates re-render just the bubble, not the
+  whole tree.
+- **Pure reducer core** — the SSE event handling is a plain function
+  `reduceSseEvent(state, event, data) => nextState`, unit-tested directly with
+  no store/network; the zustand actions are one-line wrappers around it.
+- `persist` middleware saves settings to localStorage automatically.
+
+### 17.5 rAF batching — don't setState per token
+
+Tokens arrive many times per second; one React update each would thrash the
+renderer. The hook buffers deltas and flushes once per animation frame:
+
+```ts
+tokenBuf.current += delta;
+if (rafId.current === null) rafId.current = requestAnimationFrame(flush);
+// flush(): one appendTokens() call per frame
+```
+
+Same idea as coalescing scroll/resize events.
+
+### 17.6 react-markdown + remark-gfm, and testing with vitest + happy-dom
+
+Assistant answers are markdown: `react-markdown` renders it (GFM tables via
+`remark-gfm`), with a `components` override to style code blocks and turn
+inline `[1]` citations into clickable superscripts.
+
+Tests run under **happy-dom** (a fast DOM implementation) with
+`@testing-library/react`. Two gotchas worth remembering:
+- RTL's auto-cleanup between tests needs a **global `afterEach`** — enable
+  `test.globals: true` in `vitest.config.ts`, or DOM from earlier tests leaks
+  into later ones.
+- `vi.fn(class)` is **not constructible** with `new` — pass a real subclass
+  that records its instances instead.
+
+---
+
+## 18. Scaling a Postgres search table to 3.76M rows (CFPB full dump)
+
+The CFPB full-dump ingest (3.76M rows, 8.7 GB CSV, streaming csv-parse + batched
+`INSERT ... SELECT unnest(...) ON CONFLICT`) was a real scale test. It broke things
+in exactly the order you'd expect:
+
+1. **Stale planner stats.** After a 3.76M-row insert, the planner still thought the
+   table had 8k rows and chose sequential scans. `ANALYZE tickets;` fixed estimates.
+2. **ILIKE `%...%` can't use btree.** Four OR'd `ILIKE` columns forced full scans
+   (18.7 s for `q=lg oled`). `pg_trgm` GIN indexes
+   (`gin_trgm_ops`) enable substring search via BitmapOr.
+3. **Lossy bitmaps at scale.** With default `work_mem` (4 MB) the bitmap for a
+   125k-match query exceeded memory → lossy pages → heap rechecks. `work_mem=128MB`
+   made the bitmap exact (5.2 s → 1.9 s).
+4. **Exact COUNT(*) is the wrong tool.** `count(*)` over 3.76M rows = full BitmapOr
+   heap scan. Standard fix: cap the count (`SELECT count(*) FROM (SELECT 1 ... LIMIT 10001)`),
+   return `totalCapped: true`, UI shows "10,000+".
+5. **Inline `to_tsvector(...)` in WHERE = seq scan.** The hybrid retriever computed
+   `to_tsvector('english', narrative || subject || product)` per row → 46 s. Fix: a
+   **generated column** (`search_tsv tsvector GENERATED ALWAYS AS (to_tsvector(...)) STORED`)
+   + GIN index → index scans. 46 s → 1.9 s worst case, ~45 ms typical.
+6. **Big generated-column backfills are slow** (3.76M rows × long narratives ≈ 5+ min
+   in one transaction) — run them with patience or `CREATE INDEX CONCURRENTLY`.
+
+Also learned: `websearch_to_tsquery` gives you Google-ish query syntax (`"exact phrase"`,
+`-exclude`) for free, and switches search semantics from substring to word-based — a UX
+decision, not just a perf one.
+
+**Net:** endpoint worst case 18.7 s → 0.03 s; hybrid retrieval 46 s → 1.9 s; all 65 tests
+green. The Postgres-only stack (no Elasticsearch) holds up fine at this scale.

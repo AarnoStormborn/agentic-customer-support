@@ -33,7 +33,7 @@ Baselines extended here: legacy `config/schema.yml`, `config/ingest.py`, `config
 ### 2.1 Principles
 - **Natural keys for idempotency**: `tickets (source, source_ticket_id)`; `documents (file_path)`; `document_chunks (doc_id, chunk_index)`.
 - **Provenance always visible**: every row carries `source` (+ `source_ticket_id`); synthesized identity fields flagged with `is_synthetic`.
-- **SQL agent is SELECT-only** (AGENTS.md): DDL/migrations run via a migration tool (`node-pg-migrate` or plain `.sql` applied by a script), never via agent tools.
+- **SQL agent is SELECT-only** (project rule): DDL/migrations run via a migration tool (`node-pg-migrate` or plain `.sql` applied by a script), never via agent tools.
 - Vector dimension **1536** (OpenAI `text-embedding-3-small`, the model used by legacy `ingest.py`); changing the model ⇒ new column/dimension + re-embed (see §6).
 - Legacy equivalent tables (`t_docs`, `t_docs_chunks`, `config/sql/pgvector.sql`) are superseded; v2 names below are canonical.
 

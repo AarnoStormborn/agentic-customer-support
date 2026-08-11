@@ -5,8 +5,8 @@ Agents retrieve answers from three sources: **SQL (support tickets)**, **vector 
 manuals / knowledge base)**, and **web search** — streamed live to a chat UI over SSE + WebSocket.
 
 > **v2 status:** full rebuild in progress. The v1 prototype (Python, Google ADK) lives in git
-> history (`legacy/` + prior commits) for reference. See `docs/plan.md` for the phased plan,
-> `AGENTS.md` for project rules, `docs/design/` for the design docs.
+> history (`legacy/` + prior commits) for reference. See `docs/plan.md` for the phased plan
+> and `docs/` for project rules, learnings, and design docs.
 
 ## Stack
 
@@ -22,9 +22,8 @@ manuals / knowledge base)**, and **web search** — streamed live to a chat UI o
 ## Layout
 
 ```
-AGENTS.md            pi project rules (auto-loaded)
-lessons.md           owner learning log
-docs/                research + design docs
+docs/                plan, learnings, lessons, design docs (see docs/README.md)
+ui/                  React + Vite SPA (own package.json)
 src/runtime/         pi SDK wiring (isolated)
 src/tools/           custom tools (kb search, tickets SQL, web search, route_to_agent)
 src/guardrails/      input/context/tool_call/tool_result hooks
@@ -33,6 +32,7 @@ src/server/          Fastify API
 src/queue/           BullMQ jobs (ingest, evals)
 src/retrieval/       hybrid search, embeddings, ingest
 src/mcp/             MCP server exposing retrieval tools
+scripts/             data provisioning (provision-data.sh)
 legacy/              v1 Python code (reference only)
 ```
 
