@@ -134,7 +134,8 @@ The UI design agent will make a concrete recommendation (Phase 4.4).
 ## 7. Log (append as the project moves)
 
 - **[v2 kickoff]** Chose pi SDK in-process (option A) → Node/TS project. Fastify + React/Next.js
-  pending design validation. `AGENTS.md` created so rules persist across sessions.
+  pending design validation. `AGENTS.md` created so rules persist across sessions
+  (removed 2026-08 by owner; the decisions live in `docs/plan.md` + `docs/design/consolidated.md`).
 - **[backend design]** Phase 3.1–3.3 design landed: **Fastify** chosen over Express/NestJS/Hono
   (SSE plugin + speed + TS). Agent loop: `route_to_agent` custom tool spawning child sessions;
   guardrails via `input`/`context`/`tool_call`/`tool_result` hooks. Retrieval: pgvector `<=>` +

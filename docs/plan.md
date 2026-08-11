@@ -31,7 +31,7 @@
 | 3.3 | Retrieval | hybrid search (pgvector + Postgres FTS + RRF), reranker (Cohere/BGE), embeddings, structural chunking, ingest pipeline (PDF/CSV), tickets schema, read-only SQL policy |
 | 3.4 | Data management | dataset selection (from `docs/data-research.md`), schema mapping, provisioning scripts, seed data |
 | 3.5 | UI | **Framework evaluation: React+Vite (SPA) vs Next.js (recommend one, owner knows only React).** Chat interface, streaming display, sources/citations, ticket views, manual browser |
-| 3.6 | Learning | Maintain `lessons.md` — owner-facing knowledge log; every framework/stack choice must include a beginner-level "why" entry |
+| 3.6 | Learning | Maintain `docs/lessons.md` — owner-facing knowledge log; every framework/stack choice must include a beginner-level "why" entry |
 | 3.7 | Output | `docs/design/backend-agent-retrieval.md`, `docs/design/data-management.md`, `docs/design/ui.md`, consolidated plan |
 
 ## Phase 4 — Parallel design agents (herdr)
@@ -40,15 +40,14 @@
 |---|---|---|
 | 4.1 | Close `project-analysis` + `stack-research` herdr agents (work delivered) | agents closed, panes freed |
 | 4.2 | Keep `data-research` agent → extend task: **data-management design** → `docs/design/data-management.md` | doc written |
-| 4.3 | Launch agent `design-backend-retrieval` → **backend framework eval + agent loop + retrieval design** → `docs/design/backend-agent-retrieval.md`; must append a beginner-friendly framework comparison to `lessons.md` | doc + lessons entry |
-| 4.4 | Launch agent `design-ui` → **UI framework eval (React vs Next.js) + UI design** → `docs/design/ui.md`; must append a beginner-friendly framework comparison to `lessons.md` | doc + lessons entry |
+| 4.3 | Launch agent `design-backend-retrieval` → **backend framework eval + agent loop + retrieval design** → `docs/design/backend-agent-retrieval.md`; must append a beginner-friendly framework comparison to `docs/lessons.md` | doc + lessons entry |
+| 4.4 | Launch agent `design-ui` → **UI framework eval (React vs Next.js) + UI design** → `docs/design/ui.md`; must append a beginner-friendly framework comparison to `docs/lessons.md` | doc + lessons entry |
 | 4.5 | Consolidate designs → `docs/design/consolidated.md` (owner review) | consolidated plan |
 
 ## Deliverables so far (Phase 1–2 pre-work)
 
-- `AGENTS.md` (repo root) — pi auto-loads this every session: locked stack decisions, architecture rules, workflow conventions, learning rule. Owner never repeats these.
-- `lessons.md` (repo root) — learning log (Node/TS, pi SDK, retrieval modes, framework candidates, glossary).
-- `docs/plan.md` — this file.
+- `docs/lessons.md` — learning log (Node/TS, pi SDK, retrieval modes, framework candidates, glossary).
+- `docs/plan.md` — this file. (A repo-root `AGENTS.md` with pi auto-loaded rules existed during Phases 1–4; removed by owner 2026-08 — decisions live in this plan + `docs/design/consolidated.md`.)
 
 ## Phase 5+ — Implementation (in progress — parallel worktree build)
 

@@ -61,7 +61,7 @@ is built and served**: a plain client-side SPA, or a full-stack framework like N
 > **React 19 + Vite 7, single-page app.** Learn one new tool (Vite — and it's just a dev server +
 > bundler), keep React Router for pages, consume the Fastify API with `fetch` + `EventSource` +
 > `WebSocket`. Revisit Next.js later *only if* we ever need SEO, server rendering, or a merged
-> deployment — none of which are on the roadmap (AGENTS.md locked stack: backend is Fastify,
+> deployment — none of which are on the roadmap (locked stack: backend is Fastify,
 > streaming is SSE+WS, per `docs/plan.md` Phase 3.5).
 
 ### Non-goals / explicitly rejected
@@ -395,7 +395,7 @@ Dev-only: `@types/react`, `@types/react-dom`, `@types/node`.
 - Server → client: `presence` (user/agent online), `session.updated` (sidebar refresh from other
   tabs/users), `ack`.
 
-### 6.4 Hard requirements (from AGENTS.md)
+### 6.4 Hard requirements (from docs/plan.md)
 
 - Streams **must** carry typed `event:` names (not one generic `message`) — the UI branches on type.
 - `token` deltas only — never full re-sends per token.
