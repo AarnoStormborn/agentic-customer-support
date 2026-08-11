@@ -1,23 +1,15 @@
-# Agentic Customer Support — Research & Analysis Docs
+# Agentic Customer Support — Docs
 
-This folder holds the findings of the research/analysis agents working on the project.
+| File | Contents | Status |
+|------|----------|--------|
+| [plan.md](plan.md) | Phased plan (setup → learnings → design → parallel agents → impl) | active |
+| [project-analysis.md](project-analysis.md) | v1 code review (bugs, gaps, P0 blocker) | complete |
+| [tech-stack-research.md](tech-stack-research.md) | Stack research incl. pi SDK deep-dive | complete |
+| [data-research.md](data-research.md) | Verified datasets (CFPB, suraj520, manuals) | complete |
+| **design/** | | |
+| [design/backend-agent-retrieval.md](design/backend-agent-retrieval.md) | Backend (Fastify), agent loop (pi SDK), retrieval (hybrid RRF) | complete |
+| [design/ui.md](design/ui.md) | UI (React+Vite SPA, zustand, Tailwind) | complete |
+| [design/data-management.md](design/data-management.md) | Datasets, DDL, provisioning, ingest | complete |
+| [design/consolidated.md](design/consolidated.md) | Owner review checkpoint — all decisions | review |
 
-| File | Agent | Status |
-|------|-------|--------|
-| [project-analysis.md](project-analysis.md) | `project-analysis` — code review & current status | in progress |
-| [tech-stack-research.md](tech-stack-research.md) | `stack-research` — tech stack + pi SDK research | in progress |
-| [data-research.md](data-research.md) | `data-research` — dataset research | in progress |
-
-## Mission
-
-1. **Update the stack** — modernize dependencies/frameworks (evaluate pi agents SDK)
-2. **Complete the project** to its planned scope (FastAPI API, real-time comms, SSE logging, task queue, MCP)
-3. **Extend with a full-scale retrieval system** — SQL retrieval + vector retrieval + web search over a tech-support dataset (tickets + manuals)
-
-## Current Stack (as found)
-
-- Google ADK (google-adk) + LiteLLM model adapter
-- Postgres + pgvector, SQLAlchemy, asyncpg
-- OpenAI embeddings (text-embedding-3-small)
-- duckduckgo-search
-- FastAPI (planned, not implemented)
+Top-level: `AGENTS.md` (pi rules, auto-loaded), `lessons.md` (owner learning log), `README.md`.
