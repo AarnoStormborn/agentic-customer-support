@@ -13,7 +13,9 @@
     "spike": "tsx src/dev/spike.ts",
     "typecheck": "tsc --noEmit",
     "build": "tsc -p tsconfig.build.json",
+    "db:migrate": "tsx src/db/migrate.ts",
     "ingest": "tsx src/retrieval/ingest.ts",
+    "query": "tsx src/retrieval/query.ts",
     "mcp": "tsx src/mcp/index.ts"
   },
   "dependencies": {
