@@ -39,6 +39,15 @@ export interface SSEEnvelope {
 
 export type TurnStatus = "running" | "done" | "error" | "canceled";
 
+export interface ChatSummary {
+  chatId: string;
+  conversationId: string;
+  status: TurnStatus;
+  createdAt: number;
+  finishedAt: number | null;
+  messageCount: number;
+}
+
 export type Subscriber = (env: SSEEnvelope) => void;
 
 export interface ChatTurn {
@@ -85,6 +94,37 @@ export class ChatRegistry {
 
   get(chatId: string): ChatTurn | undefined {
     return this.turns.get(chatId);
+  }
+
+  /** All chats, newest first (for the sidebar). */
+  list(): ChatSummary[] {
+    return [...this.turns.values()]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .map((t) => ({
+        chatId: t.chatId,
+        conversationId: t.conversationId,
+        status: t.status,
+        createdAt: t.createdAt,
+        finishedAt: t.finishedAt,
+        messageCount: t.session.getLastMessages().length,
+      }));
+  }
+
+  /** Detach + dispose a chat and drop it from the registry. */
+  remove(chatId: string): boolean {
+    const turn = this.turns.get(chatId);
+    if (!turn) return false;
+    turn.detachBridge?.();
+    turn.detachBridge = null;
+    for (const subscriber of [...turn.subscribers]) {
+      turn.subscribers.delete(subscriber);
+    }
+    try {
+      turn.session.dispose();
+    } catch {
+      // dispose must not fail the delete
+    }
+    return this.turns.delete(chatId);
   }
 
   has(chatId: string): boolean {
@@ -139,9 +179,5 @@ export class ChatRegistry {
     const turn = this.turns.get(chatId);
     if (!turn) return [];
     return turn.ring.filter((env) => env.id > afterId);
-  }
-
-  remove(chatId: string): void {
-    this.turns.delete(chatId);
   }
 }

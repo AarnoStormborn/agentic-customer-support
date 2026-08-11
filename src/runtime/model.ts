@@ -6,7 +6,7 @@
  * return type instead of importing the type package.
  */
 
-import type { ModelRuntime } from "@earendil-works/pi-coding-agent";
+import { ModelRuntime } from "@earendil-works/pi-coding-agent";
 
 export type AvailableModel = Awaited<ReturnType<ModelRuntime["getAvailable"]>>[number];
 export type ModelLike = AvailableModel;
@@ -31,6 +31,22 @@ const PREFERRED_SPECIALIST = [
 
 export function modelId(m: ModelLike): string {
   return `${m.provider}/${m.id}`;
+}
+
+// Lazy singleton so GET /api/models doesn't spin up the runtime per request.
+let modelRuntimePromise: Promise<ModelRuntime> | null = null;
+
+/** List available models as "provider/id" strings (for GET /api/models). */
+export async function listAvailableModels(): Promise<string[]> {
+  if (!modelRuntimePromise) {
+    modelRuntimePromise = ModelRuntime.create().catch((err) => {
+      modelRuntimePromise = null; // allow retry on next call
+      throw err;
+    });
+  }
+  const runtime = await modelRuntimePromise;
+  const available = await runtime.getAvailable();
+  return available.map(modelId);
 }
 
 function pick(

@@ -29,6 +29,8 @@ import { createSupportRuntime, type SupportRuntime } from "../runtime/index.js";
 import { healthRoutes } from "./routes/health.js";
 import { chatRoutes, type ChatRouteOptions } from "./routes/chat.js";
 import { taskRoutes } from "./routes/tasks.js";
+import { dataRoutes } from "./routes/data.js";
+import { sessionRoutes } from "./routes/sessions.js";
 
 export interface BuildAppDeps {
   registry: ChatRegistry;
@@ -62,6 +64,8 @@ export async function buildApp(overrides: Partial<BuildAppDeps> = {}): Promise<F
   });
 
   await app.register(healthRoutes);
+  await app.register(dataRoutes);
+  await app.register(sessionRoutes, { registry });
   await app.register(chatRoutes, { registry, createRuntime } satisfies ChatRouteOptions);
   await app.register(taskRoutes, { taskQueue });
 
