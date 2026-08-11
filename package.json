@@ -17,7 +17,10 @@
     "db:migrate": "tsx src/db/migrate.ts",
     "ingest": "tsx src/retrieval/ingest.ts",
     "query": "tsx src/retrieval/query.ts",
-    "mcp": "tsx src/mcp/index.ts"
+    "mcp": "tsx src/mcp/index.ts",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:db": "ACS_TEST_DB=1 vitest run tests/retrieval.test.ts"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.84.1",
@@ -41,6 +44,7 @@
     "@types/pg": "^8.11.0",
     "@types/ws": "^8.18.1",
     "tsx": "^4.19.0",
-    "typescript": "^5.6.0"
+    "typescript": "^5.6.0",
+    "vitest": "^4.1.10"
   }
 }

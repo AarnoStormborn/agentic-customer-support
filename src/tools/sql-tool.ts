@@ -23,7 +23,7 @@ import { MAX_SQL_QUERY_LEN, MAX_SQL_RESULT_ROWS, TOOL_NAMES } from "../config/li
 
 export type QueryVerdict = { ok: true; sql: string } | { ok: false; reason: string };
 
-const FORBIDDEN = /\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|copy|merge|call|do|vacuum|analyze|set|reset|show|with\s+.*\b(delete|update|insert))\b/i;
+const FORBIDDEN = /\b(insert|update|delete|drop|alter|create|truncate|grant|revoke|copy|merge|call|do|vacuum|analyze|set|reset|show|union|pg_sleep|pg_read_file|pg_ls_dir|lo_import|lo_export|with\s+.*\b(delete|update|insert))\b/i;
 
 /** Strip SQL comments (-- line and /* *​/ block) so they can't smuggle statements. */
 export function stripSqlComments(sql: string): string {

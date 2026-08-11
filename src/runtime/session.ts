@@ -21,7 +21,8 @@ import {
   SessionManager,
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
-import type { AgentSession, AgentSessionEvent, AgentSettledEvent } from "@earendil-works/pi-coding-agent";
+import type { AgentSession, AgentSessionEvent } from "@earendil-works/pi-coding-agent";
+import { createSourceEnricher, type EnrichedEvent } from "./sources.js";
 import { SUPPORT_SYSTEM_PROMPT } from "../agent/support-prompt.js";
 import { routeToAgent, configureRouteToAgent } from "../agent/route-to-agent.js";
 import { kbSearchTool } from "../tools/rag-tool.js";
@@ -29,7 +30,7 @@ import { ticketsQueryTool } from "../tools/sql-tool.js";
 import { webSearchTool } from "../tools/web-tool.js";
 import { supportGuardrails } from "../guardrails/extension.js";
 import { resolveSupervisorModel } from "./model.js";
-import { MAX_DONE_SOURCES, TURN_BUDGET_MS } from "../config/limits.js";
+import { TURN_BUDGET_MS } from "../config/limits.js";
 
 export interface SupportRuntime {
   prompt(text: string, opts?: { images?: unknown[] }): Promise<void>;
@@ -88,35 +89,16 @@ export class SupportRuntimeImpl implements SupportRuntime {
   subscribe(fn: (event: unknown) => void): () => void {
     // Wrap the subscriber to attach tool `details.sources` to the `agent_settled`
     // event (integration contract: api-streaming's bridge reads `event.sources`
-    // on `agent_settled` to build the `done` payload's sources[]). Sources are
-    // collected per turn from `tool_execution_end` results and cleared on
-    // `turn_start` / `agent_start`.
-    let collected: unknown[] = [];
-    const dedupeKey = (s: unknown) => {
-      const r = s as { title?: string; type?: string; row?: { ticket_id?: unknown } };
-      return `${r.type ?? ""}:${r.title ?? ""}:${r.row?.ticket_id ?? ""}`;
-    };
+    // on `agent_settled` to build the `done` payload's sources[]).
+    const enricher = createSourceEnricher((sources) => ({
+      type: "agent_settled",
+      sources,
+    }));
     const wrapped = (e: AgentSessionEvent) => {
-      if (e.type === "tool_execution_end") {
-        const details = (e as { result?: { details?: { sources?: unknown[] } } }).result?.details;
-        if (Array.isArray(details?.sources)) {
-          const seen = new Set(collected.map(dedupeKey));
-          for (const s of details.sources) {
-            const k = dedupeKey(s);
-            if (!k || !seen.has(k)) {
-              seen.add(k);
-              collected.push(s);
-            }
-          }
-          if (collected.length > MAX_DONE_SOURCES) collected = collected.slice(0, MAX_DONE_SOURCES);
-        }
-      } else if (e.type === "agent_start") {
-        collected = [];
-      } else if (e.type === "agent_settled") {
-        const settled = e as AgentSettledEvent & { sources?: unknown[] };
-        const enriched = { ...settled, sources: collected };
-        collected = [];
-        return fn(enriched);
+      const out = enricher.handle(e as unknown as EnrichedEvent);
+      if (out && out !== (e as unknown as EnrichedEvent)) {
+        // agent_settled was replaced with the enriched copy
+        return fn(out);
       }
       return fn(e);
     };
