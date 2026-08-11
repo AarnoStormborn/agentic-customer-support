@@ -139,6 +139,95 @@ The UI design agent will make a concrete recommendation (Phase 4.4).
   (SSE plugin + speed + TS). Agent loop: `route_to_agent` custom tool spawning child sessions;
   guardrails via `input`/`context`/`tool_call`/`tool_result` hooks. Retrieval: pgvector `<=>` +
   tsvector GIN + RRF, Cohere rerank, structural chunking, read-only SQL role.
+- **[retrieval-core impl]** Phase 5 foundation built: `src/db/` (schema + async pool) and
+  `src/retrieval/` (embed / chunk / hybrid / ingest / query CLI) landed. 8,469 suraj520 tickets +
+  3 manuals (282 chunks) ingested; `npm run query` works end-to-end. OpenAPI key absent →
+  deterministic hash-embedding fallback (see §10.6, CONTRACT-NOTES.md).
+
+---
+
+## 10. Retrieval-core implementation lessons (what you just learned by building it)
+
+### 10.1 Reciprocal Rank Fusion (RRF) — fuse ranks, not scores
+
+Dense (vector) and lexical (keyword) retrievers return **incomparable scores**: cosine
+similarity is ~0–1, BM25/ts_rank is unbounded. RRF ignores the scores entirely and fuses
+**rank positions**: `score = 1/(k + rank)` for each list, then sums per document. `k=60`
+is the standard smoothing constant. A document ranked #1 by both retrievers gets
+`1/61 + 1/61 ≈ 0.033`; one ranked #1 by only one gets `1/61 ≈ 0.016`. It's robust to
+outliers (a wild cosine score can't dominate) and needs zero calibration:
+
+```sql
+-- two ranked lists, fused:
+SELECT id, COALESCE(1.0/(60+fts.rank),0) + COALESCE(1.0/(60+vec.rank),0) AS score
+FROM fts FULL OUTER JOIN vec USING (id);
+```
+
+### 10.2 Why we need BOTH a GIN and an HNSW index
+
+| | GIN (tsvector) | HNSW (pgvector) |
+|---|---|---|
+| Finds | exact words/prefixes | semantically similar vectors |
+| Index type | inverted list of tokens | approximate nearest-neighbour graph |
+| Great at | model numbers, ticket IDs, "wi-fi" | "TV won't turn on" even if the manual says "blank screen" |
+| Weak at | synonyms, typos, paraphrase | exact IDs, rare tokens |
+
+Hybrid search runs both in ONE query and RRF-fuses the candidates — each index covers the
+other's blind spot (this is the whole point of §4.1 in the design).
+
+### 10.3 Cosine distance `<=>` vs inner product `<#>` (v1 bug)
+
+v1 ranked by negative inner product `<#>`: `similarity = -a·b`, which is **magnitude-
+sensitive** — a long text embedding scores higher than a short one even when less relevant.
+pgvector's cosine distance `embedding <=> query` normalizes for you; the HNSW index must
+match: `USING hnsw (embedding vector_cosine_ops)`.
+
+### 10.4 Parameterized SQL — why the v1 injection bug can't come back
+
+v1 did `f"LIMIT {top_k}"` (f-string interpolation into SQL — the same class of bug as SQL
+injection). In v2 every value travels as a bound parameter: the SQL text is a static
+string, values go in `$1, $2, …` and are passed separately to the driver:
+
+```ts
+await pool.query("SELECT … WHERE x @@ websearch_to_tsquery('english', $1) LIMIT $2", [query, 10]);
+```
+
+`websearch_to_tsquery` also *parses* user input into a tsquery safely (AND by default,
+quotes for phrases) — no string-built query text anywhere. (This also means the user query
+`!!!` produces an empty tsquery → the FTS branch just returns nothing instead of erroring.)
+
+### 10.5 `pg.Pool` vs a sync engine inside async code (v1 lesson #3)
+
+v1 created a *synchronous* SQLAlchemy engine inside async tools — each query blocked the
+entire event loop. `pg.Pool` is async: you `await pool.query(...)`, the pool hands the query
+to a free connection and the event loop keeps serving other work meanwhile. One module-scope
+singleton (`getPool()` in `src/db/pool.ts`) is shared by ingest + search + migrate, and
+`pool.on('error')` stops an idle-connection failure from crashing the process silently.
+
+### 10.6 Deterministic hash embeddings (the no-API-key fallback)
+
+No OpenAI key was available in this environment, so `embed.ts` falls back to a
+**feature-hashing** embedding: split text into word/bigram/trigram tokens, hash each token
+to a vector index with a random sign (FNV-1a), accumulate, L2-normalize. It's deterministic
+across runs/machines (idempotent ingest) and cosine similarity roughly tracks token overlap
+— enough to run the whole pipeline and demo hybrid search without paying for embeddings.
+Real semantic quality requires the OpenAI key (set `OPENAI_API_KEY`, re-run ingest; upserts
+converge).
+
+### 10.7 What we learned from the running system (pg quirks)
+
+- **`numeric` columns come back as strings** from node-pg — our RRF score `1/(60+rank)` is
+  numeric, so `r.score.toFixed()` exploded until we cast `::float8` in SQL.
+- **`BIGSERIAL` ids are strings too** (`row_number()` → bigint) — `60 + rank` was string
+  concatenation server-side before the cast.
+- **Idempotent upsert trick**: `INSERT … ON CONFLICT … RETURNING (xmax = 0) AS inserted` —
+  `xmax` is 0 for freshly-inserted rows, non-zero for updated ones → you get insert/update
+  counts for free.
+- **Batching without string-building**: `INSERT … SELECT * FROM unnest($1::text[], …)`
+  lets you pass 500 rows as parallel arrays in one statement (pg's 65535-param limit →
+  ~4,000+ rows per batch at 15 cols).
+- **`vector(n)` is dimension-pinned**: passing a 2-dim vector into a 1536-dim column is a
+  hard error (`different vector dimensions 1536 and 2`) — always check the model's dim.
 
 ---
 
