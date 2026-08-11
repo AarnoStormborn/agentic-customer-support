@@ -16,6 +16,8 @@
 
 import { defineTool } from "@earendil-works/pi-coding-agent";
 import { Type } from "typebox";
+import { pathToFileURL } from "node:url";
+import { resolve } from "node:path";
 import { executeMockQuery } from "./sql-mock.js";
 import { MAX_SQL_QUERY_LEN, MAX_SQL_RESULT_ROWS, TOOL_NAMES } from "../config/limits.js";
 
@@ -63,7 +65,11 @@ export function validateSelectQuery(raw: string): QueryVerdict {
 async function executeReal(query: string, params: unknown[], signal?: AbortSignal): Promise<{ rows: Record<string, unknown>[]; mode: string }> {
   const implPath = process.env.SQL_IMPL;
   if (!implPath) throw new Error("SQL_MODE=real requires SQL_IMPL (module exporting getPool())");
-  const mod: unknown = await import(implPath);
+  // Resolve relative paths against the repo root (process.cwd()), not the importing module.
+  const resolved = /^(file:|\/)/.test(implPath)
+    ? implPath
+    : pathToFileURL(resolve(process.cwd(), implPath)).href;
+  const mod: unknown = await import(resolved);
   const pool = (mod as { getPool?: () => { connect(): Promise<unknown> } }).getPool?.();
   if (!pool) throw new Error(`SQL_IMPL module '${implPath}' does not export getPool()`);
   const client = await pool.connect() as {
@@ -90,8 +96,15 @@ export const ticketsQueryTool = defineTool({
   label: "Tickets Query",
   description:
     "Query the support-tickets database (SELECT-only, read-only). Returns matching ticket rows as JSON. " +
-    "Columns include id, customer_name, product, issue, status, priority, created_at. " +
-    "Example: SELECT id, product, status FROM tickets WHERE product ILIKE '%lg tv%' ORDER BY id DESC LIMIT 5. " +
+    "Table 'tickets' columns: ticket_id, source, source_ticket_id, customer_name, customer_email, " +
+    "customer_age, customer_gender, product_purchased, date_of_purchase, ticket_type, ticket_priority, " +
+    "ticket_channel, ticket_subject, complaint_narrative, company, state, zip_code, status, " +
+    "is_synthetic, created_at. " +
+    "ticket_type values: 'Refund request'|'Billing inquiry'|'Product inquiry'|'Cancellation request'|'Technical issue'. " +
+    "ticket_priority values: 'Critical'|'High'|'Medium'|'Low'. " +
+    "Example: SELECT ticket_id, customer_name, product_purchased, ticket_type, ticket_priority, status " +
+    "FROM tickets WHERE product_purchased ILIKE '%lg%' AND ticket_type = 'Technical issue' " +
+    "ORDER BY ticket_id DESC LIMIT 5. " +
     "Write the query yourself; the tool validates it (only SELECT / EXPLAIN SELECT, single statement).",
   parameters: Type.Object({
     query: Type.String({ description: "A single SELECT statement (optionally with $1-style params)" }),
@@ -125,6 +138,14 @@ export const ticketsQueryTool = defineTool({
       ? "No tickets match the query."
       : `Returned ${rows.length} row${rows.length === 1 ? "" : "s"} (columns: ${columns.join(", ")}):\n${JSON.stringify(rows, null, 2)}`;
 
+    // Source refs for the SSE `done` event (design §2.3: type "sql", title "ticket #id", row).
+    const sources = rows.map((r) => ({
+      type: "sql",
+      title: `ticket #${String(r.ticket_id ?? r.id ?? "")}`,
+      row: r,
+      score: null,
+    }));
+
     return {
       content: [{ type: "text", text }],
       details: {
@@ -135,6 +156,7 @@ export const ticketsQueryTool = defineTool({
         truncated,
         mode,
         readOnly: true,
+        sources,
       },
     };
   },

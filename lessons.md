@@ -502,3 +502,27 @@ That's the pattern: interface + mock + one swap point, verified by `tsc --noEmit
   Postgres+Redis; POST /api/chat → SSE streams the full mock turn; rate limit 429s after
   burst; WS steer/cancel frames work; MCP initializes over stdio. Details:
   `CONTRACT-NOTES.md` (integration notes) + `DEPS.md` (new deps).
+
+---
+
+## 16. Integration lessons (parallel worktrees + merge)
+
+- **Worktrees make true parallelism safe**: `git worktree add -b <branch> .worktrees/<name>`
+  gives each agent its own checkout + branch; main stays clean. Rule that saved us: an
+  **integration contract** (module exports + SSE schema + env vars) written before the split,
+  with each track carrying a *local copy + mock* of the interface it consumes.
+- **Merge conflicts were exactly the seams we predicted**: `src/retrieval/index.ts`
+  (real vs local copy), `DEPS.md`, `CONTRACT-NOTES.md`, `lessons.md` (both agents appended
+  "section 10"). All resolved by keeping the real impl + concatenating notes.
+- **Two real integration bugs** (both contract violations the notes *did* flag):
+  1. Sources never reached `done` — the agent loop fires a **second `turn_start`** after a
+     tool call (turn 1: tool call, turn 2: answer), and our collector reset on every
+     `turn_start`. Fix: reset only on `agent_start`.
+  2. Mock SQL schema leaked into the tool description — the agent wrote `SELECT id, product,
+     status` against a real table with `ticket_id, product_purchased, ticket_type`. Fix:
+     real schema in the tool prompt + sources in tool `details`.
+- **Dynamic `import()` of a relative path resolves against the importing module**, not cwd —
+  resolve against `process.cwd()` with `pathToFileURL` for env-configured module paths.
+- **Silent guardrail blocks hang SSE streams** — when the `input` hook returns `handled`,
+  the agent never runs and no terminal event fires. Detect no-op (message count unchanged)
+  and emit `error: guardrail_blocked`.

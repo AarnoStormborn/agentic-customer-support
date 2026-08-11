@@ -23,6 +23,9 @@ export const MAX_CONCURRENT_CHILDREN = 3;
 /** Max rows returned by the tickets query tool. */
 export const MAX_SQL_RESULT_ROWS = 50;
 
+/** Max source refs attached to the SSE `done` event (deduped). */
+export const MAX_DONE_SOURCES = 25;
+
 /** Max SQL text length accepted by the tickets query tool. */
 export const MAX_SQL_QUERY_LEN = 2000;
 

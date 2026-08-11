@@ -22,7 +22,7 @@ import {
 import { attachBridge, mapPromptError } from "../../streaming/bridge.js";
 import { createSseHandler } from "../../streaming/sse.js";
 import { createWsHandler } from "../../streaming/websocket.js";
-import type { SupportRuntime } from "../../runtime/mock.js";
+import type { SupportRuntime } from "../../runtime/index.js";
 
 export interface ChatRouteOptions {
   registry: ChatRegistry;
@@ -67,7 +67,19 @@ async function runTurn(
   turn.detachBridge = detachBridge;
 
   try {
+    const messagesBefore = turn.session.getLastMessages().length;
     await turn.session.prompt(message);
+    // If the agent never ran (input guardrail returned "handled"), surface it.
+    if (turn.session.getLastMessages().length === messagesBefore) {
+      registry.emit(turn.chatId, "error", {
+        chatId: turn.chatId,
+        code: "guardrail_blocked",
+        message: "Input blocked by guardrails (prompt-injection or policy violation).",
+        retryable: false,
+      });
+      registry.mark(turn.chatId, "error");
+      return;
+    }
     if (turn.status === "running") registry.mark(turn.chatId, "done");
   } catch (err) {
     const { code, message: msg, retryable } = mapPromptError(err);

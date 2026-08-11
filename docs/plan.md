@@ -50,15 +50,14 @@
 - `lessons.md` (repo root) — learning log (Node/TS, pi SDK, retrieval modes, framework candidates, glossary).
 - `docs/plan.md` — this file.
 
-## Phase 5+ — Implementation (mapped after design approval)
+## Phase 5+ — Implementation (in progress — parallel worktree build)
 
-- 5 Retrieval layer + ingest (foundation; needs DB + data)
-- 6 Agent runtime: tools, sub-agents, guardrails
-- 7 API + streaming (SSE/WS)
-- 8 Task queue (BullMQ) + MCP export
-- 9 UI client
-- 10 Docker + deployment
-- 11 Test suite (owner: build after migration) + eval (RAGAS-style) + data provisioning
+- **5a DONE (parallel, 3 worktrees, integrated 2026-08-11):**
+  - `retrieval-core`: schema (tickets/documents/document_chunks, HNSW+GIN), async pg pool, hybrid search (pgvector+FTS+RRF), chunker, ingest CLI → **8,469 suraj520 tickets + 282 chunks ingested, `npm run query` verified**
+  - `agent-runtime`: `createSupportRuntime` (pi SDK, noTools:builtin), kb_search/tickets_query/web_search/route_to_agent tools, guardrails extension (input/tool_call/tool_result), `npm run chat` CLI
+  - `api-streaming`: Fastify app (cors/sse/ws/rate-limit/pino), SSE+WS bridges, BullMQ scaffold, MCP scaffold
+  - Integration: branches merged to main; mock runtime swapped for real; sources flow fixed (tool details → `agent_settled`); sql-tool real-schema + sources; `guardrail_blocked` SSE event; rate limiting live
+- **5b NEXT:** UI (React+Vite SPA), BullMQ real ingest workers, MCP handlers, Dockerfile, vitest suite + eval, CFPB full-dump ingest (~2.9M rows)
 
 ---
 

@@ -25,7 +25,7 @@ import { createTaskQueue } from "../queue/jobs.js";
 // verbatimModuleSyntax the default import types as the module namespace, but at
 // runtime it IS the fp-wrapped plugin function (module.exports). Cast for typing.
 const sse = sseModule as unknown as FastifyPluginAsync<{ heartbeatInterval?: number }>;
-import { createSupportRuntime, type SupportRuntime } from "../runtime/mock.js";
+import { createSupportRuntime, type SupportRuntime } from "../runtime/index.js";
 import { healthRoutes } from "./routes/health.js";
 import { chatRoutes, type ChatRouteOptions } from "./routes/chat.js";
 import { taskRoutes } from "./routes/tasks.js";
