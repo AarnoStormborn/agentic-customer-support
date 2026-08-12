@@ -1,0 +1,99 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend — typecheck, build, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run build
+      - run: npm test # 69 unit tests (DB-guarded ones are skipped without ACS_TEST_DB)
+
+  integration:
+    name: Backend — live Postgres/pgvector (data + ingest + DB tests + eval)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: ankane/pgvector:latest
+        env:
+          POSTGRES_USER: acs
+          POSTGRES_PASSWORD: acs
+          POSTGRES_DB: acs
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U acs -d acs"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      DATABASE_URL: postgresql://acs:acs@localhost:5432/acs
+      REDIS_URL: redis://localhost:6379
+      ACS_TEST_DB: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+      - name: pandas + pyarrow (suraj520 parquet → CSV conversion)
+        run: pip install --quiet pyarrow pandas
+      - name: Apply schema (pgvector + tables + indexes)
+        run: npm run db:migrate
+      - name: Provision data (suraj520 tickets + 3 manuals; CFPB full dump excluded in CI)
+        run: bash scripts/provision-data.sh
+      - name: Ingest tickets + manuals
+        run: npm run ingest
+      - name: Full test suite against the live DB
+        run: npx vitest run
+      - name: Retrieval smoke (hybrid query)
+        run: npx tsx src/retrieval/query.ts "lg tv wifi reset"
+      - name: Retrieval eval (informational report)
+        run: npm run eval
+      - name: Upload eval report
+        uses: actions/upload-artifact@v4
+        with:
+          name: eval-report
+          path: reports/eval-report.json
+
+  ui:
+    name: UI — typecheck, tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ui
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: ui/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test # 27 vitest tests
+      - run: npm run build
