@@ -658,3 +658,23 @@ decision, not just a perf one.
 
 **Net:** endpoint worst case 18.7 s → 0.03 s; hybrid retrieval 46 s → 1.9 s; all 65 tests
 green. The Postgres-only stack (no Elasticsearch) holds up fine at this scale.
+
+---
+
+## 19. MCP servers (what we learned wiring ours)
+
+- **MCP = a protocol, not a framework.** Any process can be an MCP *server*: it speaks JSON-RPC
+  over stdio (or SSE), announces its tools via `tools/list`, and executes them via `tools/call`.
+  We exported our retrieval tools (`kb_search`, `tickets_query`) as an MCP server so **any** agent
+  framework (pi, Claude, other tools) can use them — the retrieval layer becomes portable.
+- **`@modelcontextprotocol/sdk`** does the protocol for you: `new McpServer()` +
+  `server.registerTool(name, { title, description, inputSchema }, handler)` + connect a
+  `StdioServerTransport`. Logs must go to **stderr** (stdout is the protocol channel).
+- **Schemas = LLM ergonomics.** The tool description and zod input schema are what a model sees —
+  writing a precise description ("Returns ranked chunks with manual, section and page references")
+  is as important as the implementation.
+- **Never trust a raw WHERE clause.** Our `tickets_query` takes SQL from the model; the full
+  statement is run through the same SELECT-only allowlist as the agent tool, then executed in a
+  read-only transaction with a statement timeout. Defense in depth: allowlist + role + timeout.
+- **Test handlers without a transport.** Keep the handler logic in plain exported functions
+  (mocked retrieval/DB) and let `server.ts` be a thin wiring layer — unit tests never touch stdio.
