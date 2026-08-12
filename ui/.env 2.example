@@ -1,5 +1,0 @@
-# Optional: absolute API base when NOT using the Vite dev proxy.
-# Default (unset/empty) → same origin; the dev server proxies /api + /health
-# to http://localhost:8000 (see vite.config.ts).
-# Example for a deployed API: VITE_API_URL=https://api.example.com
-VITE_API_URL=
