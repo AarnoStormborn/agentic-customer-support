@@ -2,7 +2,7 @@
  * Supervisor system prompt — replaces pi's coding prompt entirely
  * (wired via DefaultResourceLoader systemPromptOverride).
  *
- * Modernized from legacy/config/agents.yml `support_agent` semantics:
+ * Modernized from the v1 `config/agents.yml` support_agent semantics (git history):
  * route to the right source (kb / sql / web), cite sources, keep a support tone.
  */
 

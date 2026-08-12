@@ -18,5 +18,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "legacy"]
+  "exclude": ["node_modules", "dist"]
 }

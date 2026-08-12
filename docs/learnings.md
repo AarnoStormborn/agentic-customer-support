@@ -1,7 +1,7 @@
 # Learnings from v1 (Python/ADK) — what to carry into v2
 
 Distilled from `docs/project-analysis.md` (full review) + git history. The v1 code is preserved
-in `legacy/` and git history; these are the operational lessons.
+in git history; these are the operational lessons.
 
 ## What broke / what to avoid
 
@@ -41,7 +41,7 @@ in `legacy/` and git history; these are the operational lessons.
 
 ## Carry-over facts
 
-- Tickets domain from `legacy/config/schema.yml`: products (LG Smart TV, iPhone, Sony PlayStation,
+- Tickets domain from v1 `config/schema.yml` (git history): products (LG Smart TV, iPhone, Sony PlayStation,
   Google Pixel, HP Pavilion, LG OLED, Dell XPS, Sony Xperia), ticket types (Refund request, Billing
   inquiry, Product inquiry, Cancellation request, Technical issue), priorities (Critical/High/
   Medium/Low), channels (Social Media/Email/Phone/Chat). v2 `tickets` DDL extends this

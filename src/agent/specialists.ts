@@ -1,5 +1,5 @@
 /**
- * Specialist sub-agent prompts — modernized from legacy/config/agents.yml
+ * Specialist sub-agent prompts — modernized from v1 `config/agents.yml` (git history)
  * (knowledge_base_agent / database_agent / web_search_agent), adapted to the
  * pi SDK: no transfer_to_agent handoff (the parent route_to_agent tool owns
  * routing), each child gets exactly one tool.
