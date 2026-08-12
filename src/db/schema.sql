@@ -43,12 +43,15 @@ CREATE TABLE IF NOT EXISTS tickets (
     updated_at          TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE (source, source_ticket_id),
     -- generated FTS vector for indexed search at scale (Phase 5b.3: inline
-    -- to_tsvector over 3.76M rows was a 46s seq scan; GIN makes it ms)
+    -- to_tsvector over 3.76M rows was a 46s seq scan; GIN makes it ms).
+    -- ticket_type included so "refund tickets"-style queries match by type
+    -- (found by the eval harness, 5b.6).
     search_tsv tsvector GENERATED ALWAYS AS (
       to_tsvector('english',
         COALESCE(complaint_narrative, '') || ' ' ||
         COALESCE(ticket_subject, '')   || ' ' ||
-        COALESCE(product_purchased, ''))
+        COALESCE(product_purchased, '') || ' ' ||
+        COALESCE(ticket_type, ''))
     ) STORED
 );
 

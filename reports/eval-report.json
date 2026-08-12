@@ -1,0 +1,128 @@
+{
+  "generatedAt": "2026-08-12T08:21:59.121Z",
+  "config": {
+    "embeddingMode": "hash"
+  },
+  "cases": [
+    {
+      "id": "kb-lg-wifi",
+      "query": "how do i reset the wifi on my lg tv",
+      "source": "kb",
+      "note": "LG OLED manual — network/connection section",
+      "topK": 5,
+      "retrieved": [
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_55b9pla.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 0.8,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-sony-sim",
+      "query": "insert sim card sony xperia",
+      "source": "kb",
+      "note": "Sony Xperia 1 V manual — SIM card section",
+      "topK": 5,
+      "retrieved": [
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-kenmore-ice",
+      "query": "kenmore refrigerator ice maker not working",
+      "source": "kb",
+      "note": "Kenmore fridge use & care guide",
+      "topK": 5,
+      "retrieved": [
+        "kb:kenmore_fridge_25331115308.pdf",
+        "kb:kenmore_fridge_25331115308.pdf",
+        "kb:kenmore_fridge_25331115308.pdf",
+        "kb:kenmore_fridge_25331115308.pdf",
+        "kb:kenmore_fridge_25331115308.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "sql-lg-refund",
+      "query": "refund request lg oled",
+      "source": "sql",
+      "note": "suraj520: LG product + refund request type (FTS ANDs terms — unmatched words return 0; keep golden queries realistic)",
+      "topK": 5,
+      "retrieved": [
+        "sql:7126",
+        "sql:1692",
+        "sql:2781",
+        "sql:3565",
+        "sql:1377"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "sql-credit-card",
+      "query": "credit card billing dispute complaint",
+      "source": "sql",
+      "note": "CFPB: credit card complaints dominate",
+      "topK": 5,
+      "retrieved": [
+        "sql:271868",
+        "sql:1553379",
+        "sql:842950",
+        "sql:1117713",
+        "sql:114817"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 0.8,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "sql-tv-technical",
+      "query": "smart tv technical issue",
+      "source": "sql",
+      "note": "suraj520 technical issues on TVs",
+      "topK": 5,
+      "retrieved": [
+        "sql:1547",
+        "sql:5736",
+        "sql:190",
+        "sql:641",
+        "sql:1211"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    }
+  ]
+}

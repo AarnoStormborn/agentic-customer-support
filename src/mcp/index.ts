@@ -2,8 +2,8 @@
  * src/mcp/index.ts — MCP server entry (npm run mcp).
  *
  * Runs the retrieval MCP server over stdio. Logs go to stderr so stdout stays clean
- * for the MCP protocol. Scaffold only — the tools return placeholders until
- * integration with retrieval-core.
+ * for the MCP protocol. Tools: kb_search (hybrid retrieval), tickets_query
+ * (read-only allowlisted SQL).
  */
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { buildMcpServer, MCP_SERVER_NAME, MCP_SERVER_VERSION } from "./server.js";

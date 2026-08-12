@@ -4,13 +4,18 @@ services:
     container_name: postgres_pgvector
     restart: always
     environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:-acs}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-acs}
+      POSTGRES_DB: ${POSTGRES_DB:-acs}
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-acs} -d ${POSTGRES_DB:-acs}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
 
   redis:
     image: redis:7-alpine
@@ -21,6 +26,29 @@ services:
     volumes:
       - redis_data:/data
     command: [ "redis-server", "--appendonly", "yes" ]
+
+  app:
+    build: .
+    container_name: acs_app
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      # Inside the compose network, DB/Redis are reached by service name
+      DATABASE_URL: postgresql://${POSTGRES_USER:-acs}:${POSTGRES_PASSWORD:-acs}@postgres:5432/${POSTGRES_DB:-acs}
+      REDIS_URL: redis://redis:6379
+      PI_MODEL: ${PI_MODEL:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-text-embedding-3-small}
+      PORT: 8000
+      HOST: 0.0.0.0
+    ports:
+      - "8000:8000"
+    # Apply the (idempotent) schema on boot, then start the API server
+    command: ["sh", "-c", "node dist/db/migrate.js && node dist/server/index.js"]
 
 volumes:
   postgres_data:

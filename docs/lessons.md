@@ -658,3 +658,61 @@ decision, not just a perf one.
 
 **Net:** endpoint worst case 18.7 s → 0.03 s; hybrid retrieval 46 s → 1.9 s; all 65 tests
 green. The Postgres-only stack (no Elasticsearch) holds up fine at this scale.
+
+---
+
+## 19. MCP servers (what we learned wiring ours)
+
+- **MCP = a protocol, not a framework.** Any process can be an MCP *server*: it speaks JSON-RPC
+  over stdio (or SSE), announces its tools via `tools/list`, and executes them via `tools/call`.
+  We exported our retrieval tools (`kb_search`, `tickets_query`) as an MCP server so **any** agent
+  framework (pi, Claude, other tools) can use them — the retrieval layer becomes portable.
+- **`@modelcontextprotocol/sdk`** does the protocol for you: `new McpServer()` +
+  `server.registerTool(name, { title, description, inputSchema }, handler)` + connect a
+  `StdioServerTransport`. Logs must go to **stderr** (stdout is the protocol channel).
+- **Schemas = LLM ergonomics.** The tool description and zod input schema are what a model sees —
+  writing a precise description ("Returns ranked chunks with manual, section and page references")
+  is as important as the implementation.
+- **Never trust a raw WHERE clause.** Our `tickets_query` takes SQL from the model; the full
+  statement is run through the same SELECT-only allowlist as the agent tool, then executed in a
+  read-only transaction with a statement timeout. Defense in depth: allowlist + role + timeout.
+- **Test handlers without a transport.** Keep the handler logic in plain exported functions
+  (mocked retrieval/DB) and let `server.ts` be a thin wiring layer — unit tests never touch stdio.
+
+---
+
+## 20. Containerizing a Node/TS app (Dockerfile lessons)
+
+- **Multi-stage**: `node:24-alpine` build stage (`npm ci` → `tsc`), then a slim runtime stage
+  with `npm ci --omit=dev` + compiled `dist/`. Result: small image, no dev deps, no source.
+- **`npm ci` needs `package-lock.json`** — copy both package files BEFORE `src/` so Docker layer
+  caching keeps `npm ci` from re-running on every code change.
+- **tsc does NOT copy non-TS assets.** `schema.sql` is read at runtime by `dist/db/migrate.js`,
+  so the Dockerfile must `COPY src/db/schema.sql dist/db/schema.sql` after the build — easy to
+  miss (the classic "works locally, breaks in Docker" because tsx runs from source).
+- **Compose networking**: inside the network, `localhost` is the container itself — DB/Redis are
+  reached by service name (`postgres:5432`, `redis:6379`). `DATABASE_URL` must be rewritten for
+  the container context (via compose env, not `.env` — dotenv won't override set vars).
+- **Healthchecks make ordering real**: `depends_on: postgres: { condition: service_healthy }`
+  with `pg_isready` beats guessing with `sleep`.
+- **Boot = migrate + serve**: `CMD ["sh","-c","node dist/db/migrate.js && node dist/server/index.js"]`
+  since the schema is idempotent (IF NOT EXISTS) — the container self-provisions its tables.
+
+---
+
+## 21. A retrieval eval harness (and what it caught)
+
+- **Golden-set eval without an LLM judge.** Hand-curate (query → expected sources) pairs and
+  score retrieval deterministically: recall@k, precision@k, MRR, hit rate. Fast, reproducible,
+  CI-friendly. (Faithfulness of *answers* needs an LLM judge — separate, heavier step.)
+- **It immediately found a real bug.** `sql-lg-refund` scored 0: `search_tsv` didn't include
+  `ticket_type`, so "refund tickets" couldn't match by type. Fix: add ticket_type to the
+  generated column + backfill → eval went 67% → 100%.
+- **`websearch_to_tsquery` ANDs all terms.** A 5-word query with one unmatched word
+  ("television" — tickets say "LG Smart TV") returns nothing. That's correct FTS behavior, but
+  golden queries must be realistic, and it's a reason to consider query relaxation later.
+- **Metrics math is easy to get wrong.** First version scored against a set of *hit ids* instead
+  of *expected items* — produced recall 4.0. Score per expected item; test the metrics in
+  isolation.
+- **Baseline now:** 6/6 cases, recall@k 1.00, MRR 1.00, precision@k 0.93 (kb + sql over the
+  3.76M-row DB). Run anytime: `npm run eval`.

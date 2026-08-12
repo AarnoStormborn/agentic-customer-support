@@ -1,19 +1,18 @@
 /**
- * src/mcp/server.ts — MCP server exporting retrieval tools (scaffold).
+ * src/mcp/server.ts — MCP server exposing the retrieval tools.
  *
- * Exposes the two retrieval tools as an MCP server:
- *   kb_search       hybrid (vector + FTS) search over the knowledge base
- *   tickets_query   read-only search over the tickets table
+ *   kb_search       hybrid (vector + FTS + RRF) search over the knowledge base
+ *   tickets_query   read-only, allowlisted search over the tickets table
  *
- * Real implementations land after integration with retrieval-core
- * (`searchHybrid` from src/retrieval/index.ts). For now the handlers return a
- * placeholder so the tool schemas + registration are provably correct.
+ * Real implementations live in src/mcp/handlers.ts (wired here; unit-tested
+ * separately in tests/mcp.test.ts).
  */
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import { kbSearchHandler, ticketsQueryHandler } from "./handlers.js";
 
 export const MCP_SERVER_NAME = "acs-retrieval";
-export const MCP_SERVER_VERSION = "0.1.0";
+export const MCP_SERVER_VERSION = "0.2.0";
 
 export function buildMcpServer(): McpServer {
   const server = new McpServer({
@@ -26,8 +25,9 @@ export function buildMcpServer(): McpServer {
     {
       title: "Knowledge Base Search",
       description:
-        "Hybrid search (pgvector + Postgres full-text + RRF) over the support knowledge base " +
-        "and manuals. Returns ranked chunks with section paths and pages.",
+        "Hybrid search (vector similarity + full-text + RRF fusion) over the support " +
+        "knowledge base and product manuals. Returns ranked chunks with manual, section " +
+        "and page references.",
       inputSchema: {
         query: z.string().min(1).max(500).describe("The user's question or search terms"),
         topK: z
@@ -39,17 +39,7 @@ export function buildMcpServer(): McpServer {
           .describe("Number of results (default 5)"),
       },
     },
-    async ({ query, topK }) => {
-      // TODO(integration): call searchHybrid({ query, topK }) from src/retrieval.
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `[mock] kb_search(query=${JSON.stringify(query)}, topK=${topK ?? 5}) — real retrieval lands at integration`,
-          },
-        ],
-      };
-    },
+    async ({ query, topK }) => kbSearchHandler(query, topK),
   );
 
   server.registerTool(
@@ -57,34 +47,26 @@ export function buildMcpServer(): McpServer {
     {
       title: "Tickets Database Query",
       description:
-        "Read-only search over support tickets (SELECT-only, parameterized, LIMIT-clamped). " +
-        "Use for ticket history, product issues, and customer context.",
+        "Read-only search over support tickets. Provide a SQL WHERE clause; the query is " +
+        "validated (SELECT-only allowlist: no DML/DDL, no UNION, no stacked statements) and " +
+        "run in a read-only transaction with a short timeout. Example where: " +
+        "ticket_type ILIKE '%refund%' AND product_purchased ILIKE '%lg%'",
       inputSchema: {
         where: z
           .string()
           .min(1)
           .max(500)
-          .describe("SQL WHERE clause on tickets (e.g. ticket_subject ILIKE '%wifi%')"),
+          .describe("SQL WHERE clause on the tickets table"),
         limit: z
           .number()
           .int()
           .min(1)
           .max(200)
           .optional()
-          .describe("Max rows (clamped to 200)"),
+          .describe("Max rows (clamped to 200, default 50)"),
       },
     },
-    async ({ where, limit }) => {
-      // TODO(integration): call the read-only SQL executor from src/tools/sql-tool.
-      return {
-        content: [
-          {
-            type: "text" as const,
-            text: `[mock] tickets_query(where=${JSON.stringify(where)}, limit=${limit ?? 50}) — real SQL lands at integration`,
-          },
-        ],
-      };
-    },
+    async ({ where, limit }) => ticketsQueryHandler(where, limit),
   );
 
   return server;

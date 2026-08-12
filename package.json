@@ -20,7 +20,8 @@
     "mcp": "tsx src/mcp/index.ts",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:db": "ACS_TEST_DB=1 vitest run tests/retrieval.test.ts"
+    "test:db": "ACS_TEST_DB=1 vitest run tests/retrieval.test.ts",
+    "eval": "tsx src/eval/run.ts"
   },
   "dependencies": {
     "@earendil-works/pi-coding-agent": "0.84.1",
