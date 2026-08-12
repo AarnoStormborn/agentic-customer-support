@@ -678,3 +678,22 @@ green. The Postgres-only stack (no Elasticsearch) holds up fine at this scale.
   read-only transaction with a statement timeout. Defense in depth: allowlist + role + timeout.
 - **Test handlers without a transport.** Keep the handler logic in plain exported functions
   (mocked retrieval/DB) and let `server.ts` be a thin wiring layer — unit tests never touch stdio.
+
+---
+
+## 20. Containerizing a Node/TS app (Dockerfile lessons)
+
+- **Multi-stage**: `node:24-alpine` build stage (`npm ci` → `tsc`), then a slim runtime stage
+  with `npm ci --omit=dev` + compiled `dist/`. Result: small image, no dev deps, no source.
+- **`npm ci` needs `package-lock.json`** — copy both package files BEFORE `src/` so Docker layer
+  caching keeps `npm ci` from re-running on every code change.
+- **tsc does NOT copy non-TS assets.** `schema.sql` is read at runtime by `dist/db/migrate.js`,
+  so the Dockerfile must `COPY src/db/schema.sql dist/db/schema.sql` after the build — easy to
+  miss (the classic "works locally, breaks in Docker" because tsx runs from source).
+- **Compose networking**: inside the network, `localhost` is the container itself — DB/Redis are
+  reached by service name (`postgres:5432`, `redis:6379`). `DATABASE_URL` must be rewritten for
+  the container context (via compose env, not `.env` — dotenv won't override set vars).
+- **Healthchecks make ordering real**: `depends_on: postgres: { condition: service_healthy }`
+  with `pg_isready` beats guessing with `sleep`.
+- **Boot = migrate + serve**: `CMD ["sh","-c","node dist/db/migrate.js && node dist/server/index.js"]`
+  since the schema is idempotent (IF NOT EXISTS) — the container self-provisions its tables.
