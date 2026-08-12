@@ -47,6 +47,9 @@ async function checkRedis(): Promise<boolean> {
     connectTimeout: REDIS_CONNECT_TIMEOUT_MS,
     maxRetriesPerRequest: 1,
   });
+  // ioredis emits 'error' events without a handler when the server is down
+  // (CI unit jobs have no Redis) — swallow to avoid unhandled-error crashes.
+  client.on("error", () => {});
   try {
     const pong = await client.ping();
     return pong === "PONG";

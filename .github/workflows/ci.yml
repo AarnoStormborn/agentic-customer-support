@@ -60,8 +60,8 @@ jobs:
         with:
           python-version: "3.12"
       - run: npm ci
-      - name: pyarrow (suraj520 parquet → CSV conversion)
-        run: pip install --quiet pyarrow
+      - name: pandas + pyarrow (suraj520 parquet → CSV conversion)
+        run: pip install --quiet pyarrow pandas
       - name: Apply schema (pgvector + tables + indexes)
         run: npm run db:migrate
       - name: Provision data (suraj520 tickets + 3 manuals; CFPB full dump excluded in CI)
