@@ -115,8 +115,12 @@ export async function loadRecentChats(limit: number = MAX_CHATS_LOAD): Promise<S
   }));
 }
 
-/** Remove a chat + its messages. */
+/** Remove a chat + its messages (best-effort). */
 export async function deleteChat(chatId: string): Promise<void> {
-  const pool = getPool();
-  await pool.query("DELETE FROM chats WHERE chat_id = $1", [chatId]);
+  try {
+    const pool = getPool();
+    await pool.query("DELETE FROM chats WHERE chat_id = $1", [chatId]);
+  } catch (err) {
+    console.error(`[persist] deleteChat(${chatId}) failed:`, (err as Error).message);
+  }
 }

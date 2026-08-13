@@ -47,7 +47,7 @@ export const sessionRoutes: FastifyPluginAsync<SessionRouteOptions> = async (app
     if (!removed) {
       return reply.code(404).send({ error: "chat_not_found", message: `No chat with id ${request.params.id}` });
     }
-    void deleteChat(request.params.id); // best-effort: purge from the store too
+    void deleteChat(request.params.id).catch(() => {}); // best-effort: purge from the store too
     return { deleted: true };
   });
 };
