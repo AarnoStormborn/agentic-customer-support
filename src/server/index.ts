@@ -5,10 +5,24 @@
 import { env } from "../config/env.js";
 import { buildApp } from "./app.js";
 import { startWorker } from "../queue/worker.js";
+import { ChatRegistry } from "../streaming/registry.js";
+import { loadRecentChats } from "../streaming/persist.js";
 
 async function main(): Promise<void> {
-  const app = await buildApp();
+  // One registry for live turns + rehydrated history (persisted chats).
+  const registry = new ChatRegistry();
+  const app = await buildApp({ registry });
   const worker = startWorker(app.log);
+
+  // Rehydrate recent conversations from Postgres so the sidebar + history
+  // survive restarts (best-effort; a missing/empty store is fine).
+  try {
+    const stored = await loadRecentChats();
+    for (const chat of stored) registry.hydrate(chat);
+    app.log.info({ rehydrated: stored.length }, "rehydrated chats from store");
+  } catch (err) {
+    app.log.warn({ err }, "chat rehydration skipped (store unavailable?)");
+  }
 
   const shutdown = async (signal: string): Promise<void> => {
     app.log.info({ signal }, "shutting down");

@@ -42,6 +42,8 @@ export interface CreateSupportRuntimeOptions {
   model?: string; // "provider/model" — overrides PI_MODEL
   chatId?: string;
   sessionDir?: string; // undefined = in-memory
+  /** Prior conversation history to seed into the agent (resume/follow-up turns). */
+  initialMessages?: unknown[];
 }
 
 export class SupportRuntimeImpl implements SupportRuntime {
@@ -155,6 +157,12 @@ export async function createSupportRuntime(
     customTools: [routeToAgent],
     tools: [routeToAgent.name], // explicit allowlist: only the router tool is callable
   });
+
+  // Seed prior conversation history for resumed conversations (agent.state.messages
+  // is the SDK-sanctioned replacement point).
+  if (opts.initialMessages?.length) {
+    session.agent.state.messages = opts.initialMessages as never;
+  }
 
   // Share the (expensive) ModelRuntime + supervisor model with child sessions.
   configureRouteToAgent({ modelRuntime, supervisorModel: model });

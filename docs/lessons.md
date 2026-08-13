@@ -738,3 +738,25 @@ Lessons:
 - The `tools: [...]` allowlist is the hard guarantee; the prompt is the soft one.
 - Child sessions still expose exactly one tool each (rag→kb_search, sql→tickets_query,
   web→web_search) — the router layer is now the only place with routing logic.
+
+---
+
+## 23. Chat session persistence (Postgres-backed)
+
+The registry was in-memory: sessions vanished on restart and the UI sidebar
+depended on it. Now every finished turn is written to `chats` + `chat_messages`
+(best-effort — a DB failure logs and is swallowed so the chat API keeps working),
+and on boot the registry rehydrates the last 100 chats.
+
+Key design points:
+- **Live vs historical turns**: live turns hold a pi `AgentSession`; rehydrated
+  turns hold `session: null` + stored messages. History/preview serve from
+  `turn.messages`, never from the session.
+- **Resume = seed the agent**: a follow-up with `conversationId` creates a NEW
+  live turn and seeds `agent.state.messages` with the prior history (the SDK's
+  sanctioned replacement point) — the model gets full context without replaying.
+- **Replace, don't append**: re-saving a chat deletes + reinserts its messages
+  (idempotent per chatId), so retries converge.
+- **Side effect discovered**: DB-guarded tests persist their mock-runtime chats
+  into the real store — harmless but noisy; a test-scoped schema/truncate is a
+  future nicety.

@@ -53,7 +53,10 @@ export type Subscriber = (env: SSEEnvelope) => void;
 export interface ChatTurn {
   chatId: string;
   conversationId: string;
-  session: SupportRuntime;
+  /** Live agent runtime; NULL for rehydrated historical chats (no pi session). */
+  session: SupportRuntime | null;
+  /** Persisted message list — the source of truth for history (live turns are synced at persist). */
+  messages: unknown[];
   status: TurnStatus;
   subscribers: Set<Subscriber>;
   /** Circular buffer of recent events (cap: env.RING_BUFFER_SIZE). */
@@ -62,6 +65,7 @@ export interface ChatTurn {
   seq: number;
   createdAt: number;
   finishedAt: number | null;
+  messageCount: number;
   /** Detach function for the session's bridge subscription (set by the chat route). */
   detachBridge: (() => void) | null;
 }
@@ -69,7 +73,14 @@ export interface ChatTurn {
 export interface CreateTurnParams {
   chatId: string;
   conversationId: string;
-  session: SupportRuntime;
+  session: SupportRuntime | null;
+  /** Stored messages for rehydrated chats (defaults to live session messages). */
+  messages?: unknown[];
+}
+
+function messagesOf(turn: ChatTurn): unknown[] {
+  if (turn.session) return turn.session.getLastMessages();
+  return turn.messages;
 }
 
 export class ChatRegistry {
@@ -80,16 +91,56 @@ export class ChatRegistry {
       chatId: params.chatId,
       conversationId: params.conversationId,
       session: params.session,
+      messages: params.messages ?? [],
       status: "running",
       subscribers: new Set(),
       ring: [],
       seq: 0,
       createdAt: Date.now(),
       finishedAt: null,
+      messageCount: (params.session?.getLastMessages().length ?? params.messages?.length) ?? 0,
       detachBridge: null,
     };
     this.turns.set(params.chatId, turn);
     return turn;
+  }
+
+  /**
+   * Rehydrate a historical chat from the store: no live session, stored messages
+   * become the turn's history (sidebar + resume).
+   */
+  hydrate(stored: {
+    chatId: string;
+    conversationId: string;
+    status: TurnStatus;
+    createdAt: number;
+    finishedAt: number | null;
+    messageCount: number;
+    messages: unknown[];
+  }): ChatTurn {
+    const turn: ChatTurn = {
+      chatId: stored.chatId,
+      conversationId: stored.conversationId,
+      session: null,
+      messages: stored.messages,
+      status: stored.status,
+      subscribers: new Set(),
+      ring: [],
+      seq: 0,
+      createdAt: stored.createdAt,
+      finishedAt: stored.finishedAt,
+      messageCount: stored.messageCount,
+      detachBridge: null,
+    };
+    this.turns.set(turn.chatId, turn);
+    return turn;
+  }
+
+  /** Find the most recent chat in a conversation (for resume/follow-ups). */
+  getByConversation(conversationId: string): ChatTurn | undefined {
+    return [...this.turns.values()]
+      .filter((t) => t.conversationId === conversationId)
+      .sort((a, b) => b.createdAt - a.createdAt)[0];
   }
 
   get(chatId: string): ChatTurn | undefined {
@@ -106,7 +157,7 @@ export class ChatRegistry {
         status: t.status,
         createdAt: t.createdAt,
         finishedAt: t.finishedAt,
-        messageCount: t.session.getLastMessages().length,
+        messageCount: messagesOf(t).length,
       }));
   }
 
@@ -120,7 +171,7 @@ export class ChatRegistry {
       turn.subscribers.delete(subscriber);
     }
     try {
-      turn.session.dispose();
+      turn.session?.dispose();
     } catch {
       // dispose must not fail the delete
     }
