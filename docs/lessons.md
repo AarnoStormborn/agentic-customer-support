@@ -760,3 +760,24 @@ Key design points:
 - **Side effect discovered**: DB-guarded tests persist their mock-runtime chats
   into the real store — harmless but noisy; a test-scoped schema/truncate is a
   future nicety.
+
+---
+
+## 24. Query relaxation (FTS auto-drop)
+
+`websearch_to_tsquery` ANDs every term — ONE unmatched word zeroes the result
+set ("refund request lg oled **television**" → 0, because tickets say
+"LG Smart TV"). Query relaxation fixes it: generate variants from strictest
+(ALL terms) down to a single term, run each until rows come back, and report
+`relaxed: true` when a drop happened.
+
+- `queryTerms` keeps quoted phrases (`"credit card"`) as single units;
+  `tsQueryVariants` drops trailing terms strictest-first.
+- `relaxedSearch` is the generic loop (returns first non-empty variant + attempts).
+- Threaded through BOTH the hybrid retrievers (kb + sql) and the `/api/tickets`
+  endpoint; `relaxed` surfaces in responses so the UI can hint "broader results".
+- The eval's golden case now *requires* relaxation ("refund request lg oled
+  television") — and scores 100%. Endpoint: 0 → 49 results with relaxed:true.
+- Gotchas hit: param-slot collision (LIMIT reused the q's $1 — the count-cap
+  refactor broke it), and a rewrite that accidentally deleted the /:id route
+  (tests caught it immediately).

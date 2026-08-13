@@ -15,6 +15,7 @@
  */
 import { getPool } from "../db/pool.js";
 import { embedTexts } from "./embed.js";
+import { tsQueryVariants, relaxedSearch } from "./relax.js";
 
 export interface HybridSource {
   type: "kb" | "sql";
@@ -43,6 +44,8 @@ export interface HybridSearchOptions {
 export interface HybridSearchResponse {
   results: HybridResult[];
   queryTimeMs: number;
+  /** True when FTS needed relaxation (an AND term was dropped to find results). */
+  relaxed?: boolean;
 }
 
 const RRF_K = 60;
@@ -58,22 +61,31 @@ export async function searchHybrid(opts: HybridSearchOptions): Promise<HybridSea
   const hasLexemes = /[a-zA-Z0-9]/.test(query);
   const perSource = sourceTypes.length > 1 ? Math.max(1, Math.ceil(topK / 2)) : topK;
   const results: HybridResult[] = [];
+  let relaxed = false;
 
   if (sourceTypes.includes("kb") && hasLexemes) {
-    results.push(...(await searchKb(query, perSource, filter)));
+    const kb = await searchKb(query, perSource, filter);
+    results.push(...kb.rows);
+    if (kb.relaxed) relaxed = true;
   }
   if (sourceTypes.includes("sql") && hasLexemes) {
-    results.push(...(await searchSql(query, perSource)));
+    const sql = await searchSql(query, perSource);
+    results.push(...sql.rows);
+    if (sql.relaxed) relaxed = true;
   }
 
-  return { results, queryTimeMs: Date.now() - started };
+  return { results, queryTimeMs: Date.now() - started, relaxed };
 }
 
 // ---------------------------------------------------------------------------
 // kb — FTS + vector fused by RRF in one query (design §4.1 SQL)
 // ---------------------------------------------------------------------------
 
-async function searchKb(query: string, topK: number, filter: Record<string, unknown>): Promise<HybridResult[]> {
+async function searchKb(
+  query: string,
+  topK: number,
+  filter: Record<string, unknown>,
+): Promise<{ rows: HybridResult[]; relaxed: boolean }> {
   const pool = getPool();
   const embedding = (await embedTexts([query]))[0]!;
 
@@ -127,27 +139,36 @@ async function searchKb(query: string, topK: number, filter: Record<string, unkn
     ORDER BY rrf.score DESC
     LIMIT $3`;
 
-  const params = [query, `[${embedding.join(",")}]`, topK, ...filterParams];
-  const { rows } = await pool.query(sql, params);
+  // FTS relaxation: websearch_to_tsquery ANDs terms — retry with progressively
+  // fewer terms when the strict query matches nothing (vector side is unaffected).
+  const runVariant = async (variant: string) => {
+    const params = [variant, `[${embedding.join(",")}]`, topK, ...filterParams];
+    const { rows } = await pool.query(sql, params);
+    return rows;
+  };
+  const { rows, relaxed } = await relaxedSearch(tsQueryVariants(query), runVariant);
 
-  return rows.map((r) => ({
-    text: r.chunk_text as string,
-    source: {
-      type: "kb" as const,
-      docName: r.doc_name as string,
-      sectionPath: (r.heading_path as string) ?? (r.section as string | null) ?? undefined,
-      page: (r.page_start as number | null) ?? undefined,
-      url: null,
-    },
-    score: r.score as number,
-  }));
+  return {
+    rows: rows.map((r) => ({
+      text: r.chunk_text as string,
+      source: {
+        type: "kb" as const,
+        docName: r.doc_name as string,
+        sectionPath: (r.heading_path as string) ?? (r.section as string | null) ?? undefined,
+        page: (r.page_start as number | null) ?? undefined,
+        url: null,
+      },
+      score: r.score as number,
+    })),
+    relaxed,
+  };
 }
 
 // ---------------------------------------------------------------------------
 // sql — tickets FTS (narrative + subject + product), RRF-style score
 // ---------------------------------------------------------------------------
 
-async function searchSql(query: string, topK: number): Promise<HybridResult[]> {
+async function searchSql(query: string, topK: number): Promise<{ rows: HybridResult[]; relaxed: boolean }> {
   const pool = getPool();
   const sql = `
     WITH fts AS (
@@ -169,9 +190,14 @@ async function searchSql(query: string, topK: number): Promise<HybridResult[]> {
     ORDER BY ranked.rank
     LIMIT $2`;
 
-  const { rows } = await pool.query(sql, [query, topK]);
+  const runVariant = async (variant: string) => {
+    const { rows } = await pool.query(sql, [variant, topK]);
+    return rows;
+  };
+  const { rows, relaxed } = await relaxedSearch(tsQueryVariants(query), runVariant);
 
-  return rows.map((r) => ({
+  return {
+    rows: rows.map((r) => ({
     text: (r.complaint_narrative as string) ?? (r.ticket_subject as string) ?? "",
     source: {
       type: "sql" as const,
@@ -191,5 +217,7 @@ async function searchSql(query: string, topK: number): Promise<HybridResult[]> {
       url: null,
     },
     score: r.score as number,
-  }));
+  })),
+  relaxed,
+};
 }

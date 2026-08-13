@@ -48,11 +48,11 @@ export const GOLDEN_SET: GoldenCase[] = [
   // --- tickets (SQL) ---
   {
     id: "sql-lg-refund",
-    query: "refund request lg oled",
+    query: "refund request lg oled television",
     source: "sql",
     expected: ["product_purchased ILIKE '%lg%'", "ticket_type ILIKE '%refund%'"],
     topK: 5,
-    note: "suraj520: LG product + refund request type (FTS ANDs terms — unmatched words return 0; keep golden queries realistic)",
+    note: "suraj520 LG refunds — 'television' is unmatched (tickets say 'LG Smart TV'); FTS relaxation drops it and still finds results",
   },
   {
     id: "sql-credit-card",
