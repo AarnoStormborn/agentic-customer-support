@@ -13,6 +13,7 @@ import type { FastifyPluginAsync } from "fastify";
 import { env } from "../../config/env.js";
 import { getPool } from "../../db/pool.js";
 import { listAvailableModels } from "../../runtime/model.js";
+import { tsQueryVariants } from "../../retrieval/relax.js";
 
 const DEFAULT_PAGE_SIZE = 25;
 const MAX_PAGE_SIZE = 100;
@@ -38,25 +39,19 @@ export const dataRoutes: FastifyPluginAsync = async (app) => {
     }
   });
 
-  // --- tickets ----------------------------------------------------------
+  // --- tickets ---
   app.get<{ Querystring: TicketQuery }>("/api/tickets", async (request, reply) => {
     const { q, status, priority, source } = request.query;
     const page = Math.max(1, Number(request.query.page) || 1);
     const pageSize = Math.min(MAX_PAGE_SIZE, Math.max(1, Number(request.query.pageSize) || DEFAULT_PAGE_SIZE));
     const offset = (page - 1) * pageSize;
 
+    const hasQ = !!(q && q.trim());
+    // $1 is reserved for the FTS search term (when present); other filters follow.
     const where: string[] = [];
     const params: unknown[] = [];
-    let n = 1;
+    let n = hasQ ? 2 : 1;
 
-    if (q && q.trim()) {
-      // FTS over the generated search_tsv column (GIN-indexed at scale).
-      // Substring ILIKE semantics were replaced by word-based FTS after the
-      // 3.76M-row scale test: 4×ILIKE OR forced seq scans (18s+).
-      where.push(`search_tsv @@ websearch_to_tsquery('english', $${n})`);
-      params.push(q.trim());
-      n += 1;
-    }
     if (status) {
       where.push(`status ILIKE $${n}`);
       params.push(status);
@@ -73,37 +68,61 @@ export const dataRoutes: FastifyPluginAsync = async (app) => {
       n += 1;
     }
 
-    const whereSql = where.length > 0 ? `WHERE ${where.join(" AND ")}` : "";
+    const clauses = [...(hasQ ? ["search_tsv @@ websearch_to_tsquery('english', $1)"] : []), ...where];
+    const whereSql = clauses.length > 0 ? `WHERE ${clauses.join(" AND ")}` : "";
 
     // Count is capped at 10k: exact counts over millions of rows force a full
-    // BitmapOr heap scan (~1-2s at 3.76M rows). The UI shows "10,000+" when
+    // BitmapOr heap scan (~1-2s at 5.2M rows). The UI shows "10,000+" when
     // totalCapped is true (scale tuning, Phase 5b.3).
     const COUNT_CAP = 10_000;
+    // LIMIT/OFFSET param index: after the reserved $1 (q) + filters.
+    const li = params.length + (hasQ ? 2 : 1);
 
-    const pool = getPool();
-    const [rowsRes, countRes] = await Promise.all([
-      pool.query(
-        `SELECT ticket_id, source, customer_name, product_purchased, date_of_purchase,
+    const selectSql = `SELECT ticket_id, source, customer_name, product_purchased, date_of_purchase,
                 ticket_type, ticket_priority, ticket_channel, ticket_subject,
                 complaint_narrative, company, status, is_synthetic, created_at
          FROM tickets ${whereSql}
          ORDER BY ticket_id DESC
-         LIMIT $${n}::int OFFSET $${n + 1}::int`,
-        [...params, pageSize, offset],
-      ),
-      pool.query(
-        `SELECT count(*)::int AS total FROM (
-           SELECT 1 FROM tickets ${whereSql} LIMIT $${n}::int
-         ) t`,
-        [...params, COUNT_CAP],
-      ),
-    ]);
+         LIMIT $${li}::int OFFSET $${li + 1}::int`;
+    const countSql = `SELECT count(*)::int AS total FROM (
+           SELECT 1 FROM tickets ${whereSql} LIMIT $${li}::int
+         ) t`;
 
-    const total = countRes.rows[0]?.total ?? 0;
+    const pool = getPool();
+    let rows: Record<string, unknown>[];
+    let total = 0;
+    let relaxed = false;
+
+    if (hasQ) {
+      // Query relaxation (Phase 5b.8): websearch_to_tsquery ANDs terms — one
+      // unmatched term zeroes results. Retry dropping trailing terms until hits.
+      const variants = tsQueryVariants(q!);
+      for (const [i, variant] of variants.entries()) {
+        const p = [variant, ...params, pageSize, offset];
+        const r = await pool.query(selectSql, p);
+        if (r.rows.length > 0) {
+          rows = r.rows;
+          const c = await pool.query(countSql, [variant, ...params, COUNT_CAP]);
+          total = c.rows[0]?.total ?? 0;
+          relaxed = i > 0;
+          break;
+        }
+      }
+      rows ??= [];
+    } else {
+      const [r, c] = await Promise.all([
+        pool.query(selectSql, [...params, pageSize, offset]),
+        pool.query(countSql, [...params, COUNT_CAP]),
+      ]);
+      rows = r.rows;
+      total = c.rows[0]?.total ?? 0;
+    }
+
     return {
-      rows: rowsRes.rows,
+      rows,
       total,
       totalCapped: total >= COUNT_CAP,
+      ...(relaxed ? { relaxed: true } : {}),
       page,
       pageSize,
     };

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-12T08:21:59.121Z",
+  "generatedAt": "2026-08-13T19:43:53.709Z",
   "config": {
     "embeddingMode": "hash"
   },
@@ -66,9 +66,9 @@
     },
     {
       "id": "sql-lg-refund",
-      "query": "refund request lg oled",
+      "query": "refund request lg oled television",
       "source": "sql",
-      "note": "suraj520: LG product + refund request type (FTS ANDs terms — unmatched words return 0; keep golden queries realistic)",
+      "note": "suraj520 LG refunds — 'television' is unmatched (tickets say 'LG Smart TV'); FTS relaxation drops it and still finds results",
       "topK": 5,
       "retrieved": [
         "sql:7126",
