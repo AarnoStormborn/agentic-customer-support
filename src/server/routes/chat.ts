@@ -100,7 +100,9 @@ async function runTurn(
     // Durability: snapshot the conversation + write it to Postgres (best-effort).
     turn.messages = turn.session?.getLastMessages() ?? turn.messages;
     turn.messageCount = turn.messages.length;
-    void saveTurn(turn);
+    void saveTurn(turn).catch(() => {
+      // never let an async persistence failure surface as an unhandled rejection
+    });
   }
 }
 
