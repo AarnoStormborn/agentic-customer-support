@@ -57,12 +57,12 @@ export function createWsHandler(registry: ChatRegistry) {
       }
       switch (frame.type) {
         case "steer":
-          if (typeof frame.text === "string" && frame.text.length > 0) {
+          if (turn.session && typeof frame.text === "string" && frame.text.length > 0) {
             void turn.session.steer(frame.text);
           }
           break;
         case "cancel":
-          void turn.session.abort();
+          if (turn.session) void turn.session.abort();
           break;
         default:
           socket.send(

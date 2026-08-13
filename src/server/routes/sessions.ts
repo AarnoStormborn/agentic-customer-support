@@ -10,6 +10,7 @@
  */
 import type { FastifyPluginAsync } from "fastify";
 import type { ChatRegistry } from "../../streaming/registry.js";
+import { deleteChat } from "../../streaming/persist.js";
 
 export interface SessionRouteOptions {
   registry: ChatRegistry;
@@ -37,7 +38,7 @@ export const sessionRoutes: FastifyPluginAsync<SessionRouteOptions> = async (app
       conversationId: turn.conversationId,
       status: turn.status,
       createdAt: turn.createdAt,
-      messages: turn.session.getLastMessages(),
+      messages: turn.messages,
     };
   });
 
@@ -46,6 +47,7 @@ export const sessionRoutes: FastifyPluginAsync<SessionRouteOptions> = async (app
     if (!removed) {
       return reply.code(404).send({ error: "chat_not_found", message: `No chat with id ${request.params.id}` });
     }
+    void deleteChat(request.params.id); // best-effort: purge from the store too
     return { deleted: true };
   });
 };
@@ -53,7 +55,7 @@ export const sessionRoutes: FastifyPluginAsync<SessionRouteOptions> = async (app
 function previewFrom(chatId: string, registry: ChatRegistry): string {
   const turn = registry.get(chatId);
   if (!turn) return "";
-  const messages = turn.session.getLastMessages() as { role?: string; content?: unknown[] }[];
+  const messages = turn.messages as { role?: string; content?: unknown[] }[];
   // Prefer the most recent user question; fall back to any text-bearing message.
   const candidates = [...messages].reverse();
   const userText = candidates.find((m) => m.role === "user" && textOf(m));

@@ -111,3 +111,30 @@ CREATE INDEX IF NOT EXISTS document_chunks_fts_idx
 -- 3) btree for navigation / section filters
 CREATE INDEX IF NOT EXISTS document_chunks_doc_idx     ON document_chunks (doc_id, chunk_index);
 CREATE INDEX IF NOT EXISTS document_chunks_section_idx ON document_chunks (section);
+
+-- ---------------------------------------------------------------------------
+-- 4. chats / chat_messages — session persistence (Phase 5b.7)
+--    The in-memory registry is hydrated from these on boot; every finished turn
+--    is written back (best-effort) so the UI sidebar + history survive restarts.
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS chats (
+    chat_id         TEXT PRIMARY KEY,            -- 'chat_<hex>'
+    conversation_id TEXT NOT NULL,               -- groups follow-ups into one thread
+    status          TEXT NOT NULL,               -- running | done | error | canceled
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    finished_at     TIMESTAMPTZ,
+    message_count   INT  NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id         BIGSERIAL PRIMARY KEY,
+    chat_id    TEXT NOT NULL REFERENCES chats(chat_id) ON DELETE CASCADE,
+    role       TEXT NOT NULL,                    -- user | assistant | tool
+    content    JSONB NOT NULL,                   -- raw AgentMessage content parts
+    turn_index INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS chats_created_idx          ON chats (created_at DESC);
+CREATE INDEX IF NOT EXISTS chats_conversation_idx     ON chats (conversation_id);
+CREATE INDEX IF NOT EXISTS chat_messages_chat_id_idx  ON chat_messages (chat_id);

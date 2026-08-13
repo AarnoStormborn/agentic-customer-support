@@ -99,6 +99,29 @@ describe("sessions & history endpoints (mock runtime)", () => {
     const body = res.json();
     expect(Array.isArray(body.models)).toBe(true);
   });
+
+  it("follow-up with the same conversationId seeds initialMessages from history", async () => {
+    const created = await app.inject({
+      method: "POST",
+      url: "/api/chat",
+      payload: { message: "reset my lg tv wifi" },
+    });
+    const { chatId, conversationId } = created.json();
+
+    const created2 = await app.inject({
+      method: "POST",
+      url: "/api/chat",
+      payload: { message: "and what about bluetooth?", conversationId },
+    });
+    expect(created2.statusCode).toBe(201);
+    const body2 = created2.json();
+    expect(body2.chatId).not.toBe(chatId); // new turn, same conversation
+    expect(body2.conversationId).toBe(conversationId);
+
+    const history = await app.inject({ method: "GET", url: `/api/chat/${chatId}/history` });
+    expect(history.statusCode).toBe(200);
+    expect(history.json().messages.length).toBe(2); // user + assistant from the mock
+  });
 });
 
 describe("tickets & manuals endpoints (live DB)", () => {

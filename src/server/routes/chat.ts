@@ -20,13 +20,14 @@ import {
   type SSEEventType,
 } from "../../streaming/registry.js";
 import { attachBridge, mapPromptError } from "../../streaming/bridge.js";
+import { saveTurn } from "../../streaming/persist.js";
 import { createSseHandler } from "../../streaming/sse.js";
 import { createWsHandler } from "../../streaming/websocket.js";
 import type { SupportRuntime } from "../../runtime/index.js";
 
 export interface ChatRouteOptions {
   registry: ChatRegistry;
-  createRuntime: (opts?: { chatId?: string; model?: string }) => Promise<SupportRuntime>;
+  createRuntime: (opts?: { chatId?: string; model?: string; initialMessages?: unknown[] }) => Promise<SupportRuntime>;
 }
 
 interface ChatBody {
@@ -55,6 +56,9 @@ async function runTurn(
   turn: ChatTurn,
   message: string,
 ): Promise<void> {
+  // Rehydrated (historical) chats have no live session — never run them.
+  if (!turn.session) return;
+
   const sink = {
     emit(event: SSEEventType, data: unknown): void {
       registry.emit(turn.chatId, event, data);
@@ -67,10 +71,10 @@ async function runTurn(
   turn.detachBridge = detachBridge;
 
   try {
-    const messagesBefore = turn.session.getLastMessages().length;
-    await turn.session.prompt(message);
+    const messagesBefore = turn.session!.getLastMessages().length;
+    await turn.session!.prompt(message);
     // If the agent never ran (input guardrail returned "handled"), surface it.
-    if (turn.session.getLastMessages().length === messagesBefore) {
+    if (turn.session!.getLastMessages().length === messagesBefore) {
       registry.emit(turn.chatId, "error", {
         chatId: turn.chatId,
         code: "guardrail_blocked",
@@ -93,6 +97,10 @@ async function runTurn(
   } finally {
     turn.detachBridge?.();
     turn.detachBridge = null;
+    // Durability: snapshot the conversation + write it to Postgres (best-effort).
+    turn.messages = turn.session?.getLastMessages() ?? turn.messages;
+    turn.messageCount = turn.messages.length;
+    void saveTurn(turn);
   }
 }
 
@@ -131,7 +139,16 @@ export const chatRoutes: FastifyPluginAsync<ChatRouteOptions> = async (app, opts
       const chatId = newId("chat");
       const conversationId = body.conversationId ?? body.sessionId ?? newId("conv");
 
-      const session = await createRuntime({ chatId, model: env.PI_MODEL || undefined });
+      // Resume: a follow-up in an existing conversation seeds the agent with the
+      // prior history (from the store or the live registry) so the model has context.
+      const prior = registry.getByConversation(conversationId);
+      const initialMessages = prior ? [...prior.messages] : undefined;
+
+      const session = await createRuntime({
+        chatId,
+        model: env.PI_MODEL || undefined,
+        initialMessages,
+      });
       const turn = registry.create({ chatId, conversationId, session });
 
       // Fire-and-forget the turn; POST returns immediately (§2.1).
@@ -174,6 +191,9 @@ export const chatRoutes: FastifyPluginAsync<ChatRouteOptions> = async (app, opts
       if (!turn) {
         return reply.code(404).send({ error: "chat_not_found", message: `No chat with id ${request.params.id}` });
       }
+      if (!turn.session) {
+        return reply.code(409).send({ error: "no_live_turn", message: "This chat has no running turn (historical session)." });
+      }
       await turn.session.steer(request.body.text ?? "");
       return reply.code(202).send({ queued: true });
     },
@@ -187,6 +207,9 @@ export const chatRoutes: FastifyPluginAsync<ChatRouteOptions> = async (app, opts
       const turn = registry.get(request.params.id);
       if (!turn) {
         return reply.code(404).send({ error: "chat_not_found", message: `No chat with id ${request.params.id}` });
+      }
+      if (!turn.session) {
+        return reply.code(409).send({ error: "no_live_turn", message: "This chat has no running turn (historical session)." });
       }
       await turn.session.abort();
       return reply.code(202).send({ cancelled: true });
