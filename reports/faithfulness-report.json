@@ -1,0 +1,532 @@
+{
+  "generatedAt": "2026-08-13T19:54:54.102Z",
+  "cases": [
+    {
+      "id": "kb-lg-wifi",
+      "query": "how do i reset the wifi on my lg tv",
+      "source": "kb",
+      "answer": "I'll route this to our product knowledge base specialist who can pull the exact steps from the LG TV manual.Here's what the manual covers for resetting Wi-Fi on your LG TV:\n\n**Per the LG OLED TV manual (LG OLED 55B9PLA), Connection > Advanced Wi-Fi Settings:**\n\n1. Press the **Settings** button on your remote to open **All Settings**\n2. Go to **[Connection] → [Wi-Fi Connection] → [Advanced Wi-Fi Settings]**\n3. From here you can view available networks and reconnect to them (selecting a network with security will prompt you for its security key)\n\n**One honest note:** The manual I have on file doesn't include a specific \"factory reset Wi-Fi\" or \"clear saved networks\" option — it primarily covers reconnecting to a network by selecting it and re-entering the password. So the practical way to \"reset\" an iffy connection is usually to:\n\n- **Forget/re-enter the network** through **Advanced Wi-Fi Settings**, or\n- **Reboot the TV** (turn it off and unplug for ~30 seconds), which often clears minor Wi-Fi glitches.\n\nIf you'd like, let me know your **exact TV model number** and I can have the knowledge base look for more specific troubleshooting steps for that model. Is the TV failing to connect, dropping connection, or did you just change your router/password?",
+      "sources": [
+        {
+          "type": "kb",
+          "title": "sony_xperia_1v_manual.pdf",
+          "sectionPath": "186",
+          "url": null,
+          "score": 0.01639344262295082
+        },
+        {
+          "type": "kb",
+          "title": "lg_oled_55b9pla.pdf",
+          "sectionPath": "If the connection is successful, the \"[Connected > CONNECTION > Safety > WI-FI CONNECTION > Safety",
+          "url": null,
+          "score": 0.016129032258064516
+        }
+      ],
+      "verdict": {
+        "faithfulness": 2,
+        "rationale": "The answer cites an LG OLED manual and provides specific navigation steps, but the sources provided have extremely low relevance scores (0.016) and vague section paths that don't clearly support the detailed step-by-step instructions given. The answer invents specific UI structure and menu paths without clear source verification. Additionally, one source is a Sony manual unrelated to LG TVs, undermining source credibility.",
+        "verdict": "fail",
+        "raw": "```json\n{\"faithfulness\": 2, \"rationale\": \"The answer cites an LG OLED manual and provides specific navigation steps, but the sources provided have extremely low relevance scores (0.016) and vague section paths that don't clearly support the detailed step-by-step instructions given. The answer invents specific UI structure and menu paths without clear source verification. Additionally, one source is a Sony manual unrelated to LG TVs, undermining source credibility.\", \"verdict\": \"fail\"}\n```"
+      }
+    },
+    {
+      "id": "kb-sony-sim",
+      "query": "insert sim card sony xperia",
+      "source": "kb",
+      "answer": "I'll route this to our product knowledge base for the Sony Xperia SIM card instructions.I have to be upfront with you: our product knowledge base only covers the electronics we support — TVs, soundbars, refrigerators, and washing machines. Sony Xperia smartphones aren't in that catalog, so I don't have access to the manual for SIM card installation.\n\nHere's a quick general guide based on how most Xperia phones work, but I'd **strongly recommend verifying against your specific model's manual**:\n\n1. **Find the SIM tray** — it's usually in a small slot on the top or side edge of the phone.\n2. **Open it** — use the SIM ejector tool (or a small paperclip) that came with the phone. Push it gently into the tiny hole next to the tray until the tray pops out.\n3. **Place the SIM card** — check the notch/cutout shape matches the tray so it only fits one way. The gold contacts should face *down* (toward the phone) on most models.\n4. **Reinsert the tray** — slide it back in firmly, gold side in, until it clicks flush.\n\nSince this is outside what our support center covers, I can't pull up the exact official instructions or guarantee steps for your specific model, so please double-check with Sony's official support site or the manual that came with your device.\n\nIs there anything else I can help you with for one of our supported products — **TVs, soundbars, refrigerators, or washing machines**?",
+      "sources": [],
+      "verdict": {
+        "faithfulness": 5,
+        "rationale": "The answer explicitly acknowledges that sources are unavailable (empty bracket) and that the Sony Xperia smartphone is outside the support knowledge base. It provides only general guidance while repeatedly directing the user to official Sony documentation and the device manual. No claims are presented as sourced facts.",
+        "verdict": "pass",
+        "raw": "```json\n{\"faithfulness\": 5, \"rationale\": \"The answer explicitly acknowledges that sources are unavailable (empty bracket) and that the Sony Xperia smartphone is outside the support knowledge base. It provides only general guidance while repeatedly directing the user to official Sony documentation and the device manual. No claims are presented as sourced facts.\", \"verdict\": \"pass\"}\n```"
+      }
+    },
+    {
+      "id": "kb-kenmore-ice",
+      "query": "kenmore refrigerator ice maker not working",
+      "source": "kb",
+      "answer": "I'll route this troubleshooting question to the knowledge base specialist who can help with this refrigerator issue.Here's what I found for your Kenmore refrigerator ice maker:\n\n## Troubleshooting a Kenmore Ice Maker That's Not Working\n\nPer the **Kenmore Refrigerator manual, Common Occurrences section**, check these items in order:\n\n1. **Wire signal arm position** — Make sure the wire signal arm (the little metal/shutoff bar inside the ice maker) is in the **down** position. If it's up, the ice maker is switched off.\n\n2. **Power connection** — Ensure the refrigerator plug is pushed tightly into the electrical outlet.\n\n3. **Water supply** — Verify the water supply valve to the refrigerator is turned on. The ice maker needs a water connection to operate.\n\n4. **Water pressure** — Water pressure must be adequate. If it's too low, the ice maker won't work properly.\n\n5. **Freezer temperature** — The freezer needs to be cold enough; if it's too warm, ice won't be produced.\n\n**Normal operation expectation:** A working ice maker should produce about **4–5 pounds of ice per 24 hours**.\n\nIf you've checked all of these and it's still not producing ice, the manual recommends having a service technician look at it.\n\nIs there any detail about your refrigerator (like the model number, or whether you're seeing any error lights or hearing any sounds) that might help narrow this down further?",
+      "sources": [
+        {
+          "type": "kb",
+          "title": "kenmore_fridge_25331115308.pdf",
+          "sectionPath": "19 > See \"Installation\" Section On Pages 6-7",
+          "url": null,
+          "score": 0.01639344262295082
+        }
+      ],
+      "verdict": {
+        "faithfulness": 1,
+        "rationale": "The answer cites a specific manual section ('Common Occurrences section') and provides detailed troubleshooting steps, but the provided source only references an 'Installation' section on pages 6-7. The answer invents troubleshooting content that cannot be verified against the actual source material provided, and the citation does not match what was actually retrieved.",
+        "verdict": "fail",
+        "raw": "```json\n{\n  \"faithfulness\": 1,\n  \"rationale\": \"The answer cites a specific manual section ('Common Occurrences section') and provides detailed troubleshooting steps, but the provided source only references an 'Installation' section on pages 6-7. The answer invents troubleshooting content that cannot be verified against the actual source material provided, and the citation does not match what was actually retrieved.\",\n  \"verdict\": \"fail\"\n}\n```"
+      }
+    },
+    {
+      "id": "sql-lg-refund",
+      "query": "refund request lg oled television",
+      "source": "sql",
+      "answer": "I'll route this refund request to the support tickets database to check the order and status.I found 41 refund requests for LG OLED televisions in our system, so I'll need a bit more information to pinpoint yours. Here are the most recent ones:\n\n**Most Recent Refund Requests:**\n\n1. **Ticket #8145** — Crosbymonica — LG OLED (Aug 18, 2024) — Cancellation request\n2. **Ticket #7632** — Kvaldez — LG OLED (Jun 4, 2023) — Network problem\n3. **Ticket #7910** — Amandakennedy — LG OLED (Mar 19, 2023) — Cancellation request\n4. **Ticket #7903** — Bgraham — LG OLED (May 30, 2023) — **High priority** — Hardware issue\n5. **Ticket #6596** — Gspears — LG OLED (Dec 25, 2024) — **Critical priority** — Network problem\n\n*(Source: support tickets database — 41 total LG OLED refund requests)*\n\nTo help me check *your* refund status, could you share one of the following?\n- Your **ticket number** (if you have one), or\n- The **name/email** on the order, or\n- The **reason** for the refund (e.g., cancellation, hardware issue, network problem)\n\nThat way I can pull up the right ticket and give you an accurate status.",
+      "sources": [
+        {
+          "type": "sql",
+          "title": "ticket #8145",
+          "row": {
+            "ticket_id": "8145",
+            "customer_name": "Crosbymonica",
+            "customer_email": "crosbymonica@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-08-18T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "cancellation request",
+            "status": null,
+            "created_at": "2026-08-11T16:46:17.060Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7632",
+          "row": {
+            "ticket_id": "7632",
+            "customer_name": "Kvaldez",
+            "customer_email": "kvaldez@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-06-04T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "network problem",
+            "status": null,
+            "created_at": "2026-08-11T16:46:17.022Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7910",
+          "row": {
+            "ticket_id": "7910",
+            "customer_name": "Amandakennedy",
+            "customer_email": "amandakennedy@example.com",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-03-19T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "cancellation request",
+            "status": null,
+            "created_at": "2026-08-11T16:46:17.022Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7903",
+          "row": {
+            "ticket_id": "7903",
+            "customer_name": "Bgraham",
+            "customer_email": "bgraham@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-05-30T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "hardware issue",
+            "status": null,
+            "created_at": "2026-08-11T16:46:17.022Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7887",
+          "row": {
+            "ticket_id": "7887",
+            "customer_name": "Kfoster",
+            "customer_email": "kfoster@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-12-09T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Low",
+            "ticket_subject": "product compatibility",
+            "status": null,
+            "created_at": "2026-08-11T16:46:17.022Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7126",
+          "row": {
+            "ticket_id": "7126",
+            "customer_name": "Fburke",
+            "customer_email": "fburke@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-07-22T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "refund request",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.960Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7159",
+          "row": {
+            "ticket_id": "7159",
+            "customer_name": "Kelly",
+            "customer_email": "kelly74@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-12-05T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Low",
+            "ticket_subject": "hardware issue",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.960Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #7054",
+          "row": {
+            "ticket_id": "7054",
+            "customer_name": "Nelsonnancy",
+            "customer_email": "nelsonnancy@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-07-07T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "product recommendation",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.960Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #6659",
+          "row": {
+            "ticket_id": "6659",
+            "customer_name": "Sullivanashley",
+            "customer_email": "sullivanashley@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-08-07T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Low",
+            "ticket_subject": "display issue",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.919Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #6708",
+          "row": {
+            "ticket_id": "6708",
+            "customer_name": "Jamestrevino",
+            "customer_email": "jamestrevino@example.com",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-11-24T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "hardware issue",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.919Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #6596",
+          "row": {
+            "ticket_id": "6596",
+            "customer_name": "Gspears",
+            "customer_email": "gspears@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-12-25T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Critical",
+            "ticket_subject": "network problem",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.919Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #6413",
+          "row": {
+            "ticket_id": "6413",
+            "customer_name": "Jessicadaniels",
+            "customer_email": "jessicadaniels@example.com",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-10-27T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "peripheral compatibility",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.847Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #6125",
+          "row": {
+            "ticket_id": "6125",
+            "customer_name": "George",
+            "customer_email": "george09@example.com",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-08-01T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Low",
+            "ticket_subject": "display issue",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.847Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5989",
+          "row": {
+            "ticket_id": "5989",
+            "customer_name": "Gordonpatricia",
+            "customer_email": "gordonpatricia@example.com",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-09-30T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Critical",
+            "ticket_subject": "peripheral compatibility",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.787Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5833",
+          "row": {
+            "ticket_id": "5833",
+            "customer_name": "Sean",
+            "customer_email": "sean23@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-10-12T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Critical",
+            "ticket_subject": "product compatibility",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.787Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5451",
+          "row": {
+            "ticket_id": "5451",
+            "customer_name": "Heatheradams",
+            "customer_email": "heatheradams@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-12-19T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "installation support",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.750Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5064",
+          "row": {
+            "ticket_id": "5064",
+            "customer_name": "Gonzalezaaron",
+            "customer_email": "gonzalezaaron@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-01-28T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Critical",
+            "ticket_subject": "product setup",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.750Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5176",
+          "row": {
+            "ticket_id": "5176",
+            "customer_name": "Cgriffin",
+            "customer_email": "cgriffin@example.com",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-07-19T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "battery life",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.750Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5239",
+          "row": {
+            "ticket_id": "5239",
+            "customer_name": "Hughesdanielle",
+            "customer_email": "hughesdanielle@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-09-19T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Critical",
+            "ticket_subject": "display issue",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.750Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5316",
+          "row": {
+            "ticket_id": "5316",
+            "customer_name": "Dtran",
+            "customer_email": "dtran@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-01-14T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "product compatibility",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.750Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #5346",
+          "row": {
+            "ticket_id": "5346",
+            "customer_name": "Patricia",
+            "customer_email": "patricia45@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-03-22T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Low",
+            "ticket_subject": "account access",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.750Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #3628",
+          "row": {
+            "ticket_id": "3628",
+            "customer_name": "Oadams",
+            "customer_email": "oadams@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-03-21T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "account access",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.580Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #3565",
+          "row": {
+            "ticket_id": "3565",
+            "customer_name": "Matthew",
+            "customer_email": "matthew38@example.net",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-05-30T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "cancellation request",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.580Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #3111",
+          "row": {
+            "ticket_id": "3111",
+            "customer_name": "Vdavis",
+            "customer_email": "vdavis@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2024-01-31T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "Medium",
+            "ticket_subject": "product recommendation",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.522Z"
+          },
+          "score": null
+        },
+        {
+          "type": "sql",
+          "title": "ticket #3078",
+          "row": {
+            "ticket_id": "3078",
+            "customer_name": "Katiebeck",
+            "customer_email": "katiebeck@example.org",
+            "product_purchased": "LG OLED",
+            "date_of_purchase": "2023-09-28T18:30:00.000Z",
+            "ticket_type": "Refund request",
+            "ticket_priority": "High",
+            "ticket_subject": "delivery problem",
+            "status": null,
+            "created_at": "2026-08-11T16:46:16.522Z"
+          },
+          "score": null
+        }
+      ],
+      "verdict": {
+        "faithfulness": 2,
+        "rationale": "The answer claims ticket #6596 has 'Critical priority' and 'Network problem' (correct per sources), but lists it as dated Dec 25, 2024 when sources show that date. However, the answer states there are '41 total LG OLED refund requests' but only 25 sources are provided, making this claim unverifiable and likely fabricated. Additionally, ticket #7903 is marked 'High priority' (correct) but the answer invents 'Hardware issue' as the reason when sources show 'hardware issue' (lowercase)—a minor issue. The more serious problem is the unsupported '41 total' claim with no source backing.",
+        "verdict": "fail",
+        "raw": "```json\n{\"faithfulness\": 2, \"rationale\": \"The answer claims ticket #6596 has 'Critical priority' and 'Network problem' (correct per sources), but lists it as dated Dec 25, 2024 when sources show that date. However, the answer states there are '41 total LG OLED refund requests' but only 25 sources are provided, making this claim unverifiable and likely fabricated. Additionally, ticket #7903 is marked 'High priority' (correct) but the answer invents 'Hardware issue' as the reason when sources show 'hardware issue' (lowercase)—a minor issue. The more serious problem is the unsupported '41 total' claim with no source backing.\", \"verdict\": \"fail\"}\n```"
+      }
+    },
+    {
+      "id": "sql-credit-card",
+      "query": "credit card billing dispute complaint",
+      "source": "sql",
+      "answer": "I can help you with a billing dispute complaint. Let me look up your support ticket history to see what we're working with.\n\nTo route this correctly, I need to know a bit more. Could you share your order number or the email address linked to your account? That way I can pull up the specific ticket and any related billing details.\n\nAlternatively, if you just want to file a new billing dispute complaint, I can start that process for you once I have those details.",
+      "sources": [],
+      "verdict": {
+        "faithfulness": 5,
+        "rationale": "The answer makes no specific claims about billing disputes, support processes, or company policies. It only asks clarifying questions and offers to help—statements that don't require source support. No citations are provided or unused.",
+        "verdict": "pass",
+        "raw": "```json\n{\"faithfulness\": 5, \"rationale\": \"The answer makes no specific claims about billing disputes, support processes, or company policies. It only asks clarifying questions and offers to help—statements that don't require source support. No citations are provided or unused.\", \"verdict\": \"pass\"}\n```"
+      }
+    },
+    {
+      "id": "sql-tv-technical",
+      "query": "smart tv technical issue",
+      "source": "sql",
+      "answer": "I'd be happy to help you with your smart TV technical issue! To route this to the right specialist, could you let me know a bit more about what's going on? For example:\n\n- What's the problem you're experiencing (no picture, Wi-Fi won't connect, apps crashing, remote not working, etc.)?\n- What's the brand and model of your TV?\n\nThat way I can get you the right help quickly. In the meantime, let me route this to our knowledge base specialist to see what common troubleshooting info we have.\n\nActually, let me route your request to our product manual specialist right away, and you can share more details as we go.Great — my knowledge base specialist is ready to help, but I'll need a few specifics to give you accurate, sourced troubleshooting steps. Could you tell me:\n\n1. **Brand and model** of your smart TV (e.g., LG OLED65C4, Samsung QN65Q80D)?\n2. **What exactly is going wrong?** For example:\n   - Wi-Fi won't connect\n   - No picture or sound\n   - Apps crash or won't load\n   - Remote not responding\n   - TV won't turn on\n   - Picture quality issues (blurry, flickering, etc.)\n\nOnce you share those details, I'll route your specific issue to the right specialist and get you step-by-step help with sources.",
+      "sources": [],
+      "verdict": {
+        "faithfulness": 5,
+        "rationale": "The answer makes no factual claims that require source support—it only asks clarifying questions and offers to help route the request. Since there are no citations and no substantive claims about TV troubleshooting, there is nothing to contradict the (empty) sources.",
+        "verdict": "pass",
+        "raw": "```json\n{\"faithfulness\": 5, \"verdict\": \"pass\", \"rationale\": \"The answer makes no factual claims that require source support—it only asks clarifying questions and offers to help route the request. Since there are no citations and no substantive claims about TV troubleshooting, there is nothing to contradict the (empty) sources.\"}\n```"
+      }
+    }
+  ]
+}
