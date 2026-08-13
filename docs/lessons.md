@@ -716,3 +716,25 @@ green. The Postgres-only stack (no Elasticsearch) holds up fine at this scale.
   isolation.
 - **Baseline now:** 6/6 cases, recall@k 1.00, MRR 1.00, precision@k 0.93 (kb + sql over the
   3.76M-row DB). Run anytime: `npm run eval`.
+
+---
+
+## 22. Pure-router supervisor (fixing double retrieval)
+
+The supervisor originally exposed BOTH direct tools (`kb_search`, `tickets_query`,
+`web_search`) AND `route_to_agent`. The model often did both for one question —
+the captured event trace showed `kb_search` *and* `route_to_agent(rag)` for the
+same "LG TV wifi" query: doubled latency + cost.
+
+Fix: make the supervisor a **pure router** — `customTools: [routeToAgent]` +
+`tools: ["route_to_agent"]` allowlist, and the prompt rewritten to "you never
+retrieve yourself, always dispatch". Verified live: a two-part question now emits
+exactly two `route_to_agent` calls (rag + sql), zero direct tool calls.
+
+Lessons:
+- **Exposing both a tool and a router-to-same-tool invites redundancy** — models
+  hedge by calling both. Remove the ambiguous path structurally (allowlist), don't
+  rely on prompt wording alone ("prefer route_to_agent" was ignored).
+- The `tools: [...]` allowlist is the hard guarantee; the prompt is the soft one.
+- Child sessions still expose exactly one tool each (rag→kb_search, sql→tickets_query,
+  web→web_search) — the router layer is now the only place with routing logic.

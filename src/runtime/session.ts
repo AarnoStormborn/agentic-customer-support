@@ -3,7 +3,7 @@
  * docs/design/backend-agent-retrieval.md §3.1 + the integration contract:
  *
  * - noTools: "builtin"            → support sessions get NO filesystem tools (locked rule)
- * - customTools: [rag, sql, web, route_to_agent]
+ * - customTools: [route_to_agent]  (pure router — retrieval happens in sub-agents)
  * - systemPromptOverride          → supervisor prompt (src/agent/support-prompt.ts)
  * - SettingsManager.inMemory({ compaction: false })
  * - SessionManager.inMemory()     (optional sessionDir → JSONL persistence)
@@ -25,9 +25,6 @@ import type { AgentSession, AgentSessionEvent } from "@earendil-works/pi-coding-
 import { createSourceEnricher, type EnrichedEvent } from "./sources.js";
 import { SUPPORT_SYSTEM_PROMPT } from "../agent/support-prompt.js";
 import { routeToAgent, configureRouteToAgent } from "../agent/route-to-agent.js";
-import { kbSearchTool } from "../tools/rag-tool.js";
-import { ticketsQueryTool } from "../tools/sql-tool.js";
-import { webSearchTool } from "../tools/web-tool.js";
 import { supportGuardrails } from "../guardrails/extension.js";
 import { resolveSupervisorModel } from "./model.js";
 import { TURN_BUDGET_MS } from "../config/limits.js";
@@ -152,7 +149,11 @@ export async function createSupportRuntime(
     sessionManager,
     settingsManager,
     noTools: "builtin", // ← architecture rule 1: support sessions get NO filesystem tools
-    customTools: [kbSearchTool, ticketsQueryTool, webSearchTool, routeToAgent],
+    // Pure router: the supervisor NEVER retrieves directly. All kb/sql/web work is
+    // dispatched to specialist sub-agents via route_to_agent (fixes the
+    // double-retrieval pattern — kb_search AND route_to_agent for one question).
+    customTools: [routeToAgent],
+    tools: [routeToAgent.name], // explicit allowlist: only the router tool is callable
   });
 
   // Share the (expensive) ModelRuntime + supervisor model with child sessions.
