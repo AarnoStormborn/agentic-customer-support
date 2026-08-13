@@ -781,3 +781,26 @@ set ("refund request lg oled **television**" → 0, because tickets say
 - Gotchas hit: param-slot collision (LIMIT reused the q's $1 — the count-cap
   refactor broke it), and a rewrite that accidentally deleted the /:id route
   (tests caught it immediately).
+
+---
+
+## 25. Answer-level faithfulness eval (LLM judge)
+
+Retrieval metrics (recall@k, MRR) can't see whether the ANSWER is good — so we
+added a judge: run a real agent turn per golden case, capture the final answer
++ sources, and have a cheap model (haiku-class) score faithfulness 1-5
+(`npm run eval:answer`).
+
+First run's honest findings (avg 3.3/5, 50% pass):
+- **Faithfulness ≠ correctness**: the judge rewards an honest "not found". The
+  Sony case — retrieval finds the Xperia manual (retrieval eval: 100%) but the
+  answer said "not in catalog" — passed as faithful but was factually WRONG.
+  Retrieval eval and answer eval measure different things; you need both.
+- **Clarifying-question answers pass** (no fabrication) but aren't answers — the
+  router's "ask one short clarifying question" rule fires too eagerly on
+  answerable queries.
+- Judge scores can look harsh on real-content answers (kenmore got 1 with a
+  plausible answer) — verdicts are directional, not gospel; inspect the report.
+- `parseVerdict` is the testable seam: strict-JSON prompt + tolerant parser
+  (code fences, clamping). Judge calls use a dedicated no-tools session —
+  reuse the model-picking pattern instead of pi-ai/compat imports.
