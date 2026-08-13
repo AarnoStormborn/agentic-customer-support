@@ -3,6 +3,7 @@
 | File | Contents | Status |
 |------|----------|--------|
 | [plan.md](plan.md) | Phased plan (setup → learnings → design → parallel agents → impl) | active |
+| [how-it-works.md](how-it-works.md) | The streaming agent loop, first principles → code + generic recipe | active |
 | [lessons.md](lessons.md) | Owner learning log (Node/TS, pi SDK, frameworks, scale lessons) | active |
 | [learnings.md](learnings.md) | v1 mistakes distilled (what not to repeat) | complete |
 | [CONTRACT-NOTES.md](CONTRACT-NOTES.md) | Track integration notes (worktree dev) | complete |
