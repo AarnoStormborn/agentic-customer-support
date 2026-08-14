@@ -26,22 +26,26 @@ import type { AgentKind } from "./specialists.js";
 import { kbSearchTool } from "../tools/rag-tool.js";
 import { ticketsQueryTool } from "../tools/sql-tool.js";
 import { webSearchTool } from "../tools/web-tool.js";
+import { buildKbTool } from "../tools/rag-tool.js";
 import { supportGuardrails } from "../guardrails/extension.js";
 import { resolveSpecialistModel } from "../runtime/model.js";
 import type { ModelLike } from "../runtime/model.js";
 import { ALLOWED_AGENTS, CHILD_TIMEOUT_MS, MAX_CONCURRENT_CHILDREN, TOOL_NAMES } from "../config/limits.js";
+import { normalizeStrategy, type RetrievalStrategy } from "../retrieval/strategy.js";
 
-const SPECIALIST_TOOLS = {
-  rag: kbSearchTool,
-  sql: ticketsQueryTool,
-  web: webSearchTool,
-} as const;
+/** Specialist tool bound to the session's retrieval strategy (rag = strategy-aware). */
+function specialistTool(kind: AgentKind, strategy: RetrievalStrategy) {
+  if (kind === "rag") return buildKbTool(strategy);
+  if (kind === "sql") return ticketsQueryTool;
+  return webSearchTool;
+}
 
 // ---- shared ModelRuntime (created once per process; children reuse it) ----
 
 interface SharedDeps {
   modelRuntime: ModelRuntime;
   supervisorModel: ModelLike;
+  strategy: RetrievalStrategy;
 }
 
 let shared: SharedDeps | null = null;
@@ -58,7 +62,7 @@ async function getShared(): Promise<SharedDeps> {
     if (available.length === 0) {
       throw new Error("No authenticated models found for specialist sessions.");
     }
-    shared = { modelRuntime, supervisorModel: available[0]! };
+    shared = { modelRuntime, supervisorModel: available[0]!, strategy: normalizeStrategy() };
   }
   return shared;
 }
@@ -146,9 +150,9 @@ function extractFromMessages(session: AgentSession): { finalText: string; source
 }
 
 async function runChild(kind: AgentKind, query: string, parentSignal?: AbortSignal): Promise<CollectedRun> {
-  const { modelRuntime, supervisorModel } = await getShared();
+  const { modelRuntime, supervisorModel, strategy } = await getShared();
   const model = await resolveSpecialistModel(modelRuntime, supervisorModel);
-  const tool = SPECIALIST_TOOLS[kind];
+  const tool = specialistTool(kind, strategy);
 
   const settingsManager = SettingsManager.inMemory({
     compaction: { enabled: false },

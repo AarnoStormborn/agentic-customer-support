@@ -27,7 +27,12 @@ import type { SupportRuntime } from "../../runtime/index.js";
 
 export interface ChatRouteOptions {
   registry: ChatRegistry;
-  createRuntime: (opts?: { chatId?: string; model?: string; initialMessages?: unknown[] }) => Promise<SupportRuntime>;
+  createRuntime: (opts?: {
+    chatId?: string;
+    model?: string;
+    initialMessages?: unknown[];
+    retrieval?: Record<string, unknown>;
+  }) => Promise<SupportRuntime>;
 }
 
 interface ChatBody {
@@ -37,6 +42,8 @@ interface ChatBody {
   sessionId?: string;
   ticketId?: number;
   metadata?: Record<string, unknown>;
+  /** Retrieval strategy knobs (Phase 5c) — forwarded to the kb_search tool. */
+  retrieval?: Record<string, unknown>;
 }
 
 interface SteerBody {
@@ -116,6 +123,20 @@ const chatBodySchema = {
     sessionId: { type: "string" },
     ticketId: { type: "number" },
     metadata: { type: "object", additionalProperties: true },
+    retrieval: {
+      type: "object",
+      additionalProperties: false,
+      properties: {
+        mode: { type: "string", enum: ["hybrid", "vector", "keyword", "hyde", "hyde-hybrid"] },
+        topK: { type: "number", minimum: 1, maximum: 10 },
+        rrfK: { type: "number", minimum: 10, maximum: 120 },
+        relax: { type: "boolean" },
+        multiQuery: { type: "boolean" },
+        numVariants: { type: "number", minimum: 2, maximum: 5 },
+        queryExpansion: { type: "boolean" },
+        rerank: { type: "boolean" },
+      },
+    },
   },
 } as const;
 
@@ -150,6 +171,7 @@ export const chatRoutes: FastifyPluginAsync<ChatRouteOptions> = async (app, opts
         chatId,
         model: env.PI_MODEL || undefined,
         initialMessages,
+        retrieval: body.retrieval,
       });
       const turn = registry.create({ chatId, conversationId, session });
 

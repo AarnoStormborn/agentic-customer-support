@@ -23,6 +23,7 @@ import {
 } from "@earendil-works/pi-coding-agent";
 import type { AgentSession, AgentSessionEvent } from "@earendil-works/pi-coding-agent";
 import { createSourceEnricher, type EnrichedEvent } from "./sources.js";
+import { normalizeStrategy, type RetrievalStrategy } from "../retrieval/strategy.js";
 import { SUPPORT_SYSTEM_PROMPT } from "../agent/support-prompt.js";
 import { routeToAgent, configureRouteToAgent } from "../agent/route-to-agent.js";
 import { supportGuardrails } from "../guardrails/extension.js";
@@ -44,6 +45,8 @@ export interface CreateSupportRuntimeOptions {
   sessionDir?: string; // undefined = in-memory
   /** Prior conversation history to seed into the agent (resume/follow-up turns). */
   initialMessages?: unknown[];
+  /** Retrieval strategy for this session's kb_search (Phase 5c). */
+  retrieval?: Partial<RetrievalStrategy>;
 }
 
 export class SupportRuntimeImpl implements SupportRuntime {
@@ -165,7 +168,7 @@ export async function createSupportRuntime(
   }
 
   // Share the (expensive) ModelRuntime + supervisor model with child sessions.
-  configureRouteToAgent({ modelRuntime, supervisorModel: model });
+  configureRouteToAgent({ modelRuntime, supervisorModel: model, strategy: normalizeStrategy(opts.retrieval) });
 
   return new SupportRuntimeImpl(session, modelRuntime, modelLabel, chatId);
 }

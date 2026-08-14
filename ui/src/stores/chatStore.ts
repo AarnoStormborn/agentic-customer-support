@@ -11,6 +11,7 @@
  */
 import { create } from "zustand";
 import { api } from "../lib/api";
+import { useSettingsStore } from "./settingsStore";
 import type {
   ChatHistoryResponse,
   DoneUsage,
@@ -371,7 +372,7 @@ export const useChatStore = create<ChatState>()((set, get) => ({
         message: text,
         conversationId: convId ?? undefined,
         ticketId: opts?.ticketId,
-        metadata: { retrieval: { sql: true, vector: true, web: true } },
+        retrieval: { ...useSettingsStore.getState().retrieval },
       });
       set({
         activeChatId: res.chatId,

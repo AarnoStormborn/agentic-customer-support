@@ -804,3 +804,38 @@ First run's honest findings (avg 3.3/5, 50% pass):
 - `parseVerdict` is the testable seam: strict-JSON prompt + tolerant parser
   (code fences, clamping). Judge calls use a dedicated no-tools session —
   reuse the model-picking pattern instead of pi-ai/compat imports.
+
+---
+
+## 26. Configurable retrieval strategies (HYDE, RRF-k, multiQuery, expansion, rerank)
+
+Exploration phase: the retrieval layer is now a **strategy object** that flows
+UI → POST /api/chat → runtime → the kb_search tool (built per-session via
+`buildKbTool(strategy)`, so no shared mutable state) → searchHybrid.
+
+Techniques:
+- **Mode**: hybrid (FTS+vector+RRF) / vector / keyword / **hyde** (embed an
+  LLM-generated hypothetical answer instead of the query) / **hyde-hybrid**.
+- **rrfK** slider (10-120): the RRF fusion constant, k=60 default.
+- **relax** (query relaxation, §24), **multiQuery** (LLM paraphrases → retrieve
+  each → RRF-fuse), **queryExpansion** (rule-based synonyms, free), **rerank**
+  (Cohere cross-encoder, key-gated passthrough).
+
+Measured on the golden set (`npm run eval -- --strategy <mode>`):
+| mode | recall@k | MRR | note |
+|---|---|---|---|
+| hybrid | 1.00 | 1.00 | default |
+| vector | 1.00 | 1.00 | matches hybrid on this tiny corpus |
+| keyword | 0.83 | 0.83 | misses a case |
+| hyde | 1.00 | 0.92 | HYDE doesn't beat plain vector here (3 manuals — HYDE shines on big/noisy corpora) |
+| hyde-hybrid | 1.00 | 0.92 | same as hyde |
+
+Lessons:
+- **Technique value is corpus-dependent**: HYDE adds LLM latency+cost and didn't
+  beat plain vector on 3 manuals. The eval is how you know — always measure.
+- **Strategy must be per-session, not global**: thread it via a tool factory
+  (closure), never a module singleton (concurrent chats would race).
+- The conditional-SQL bug: the RRF score expression referenced `fts.rank` even
+  in vector-only mode — build the FROM/score expressions per mode.
+- `hybrid` vs `vector` identical here because hash-embeddings ≈ token overlap;
+  with real embeddings + a bigger corpus the difference will show.
