@@ -11,12 +11,17 @@ import { persist } from "zustand/middleware";
 export type Theme = "dark" | "light";
 export type FontSize = "sm" | "md" | "lg";
 
+export type RetrievalMode = "hybrid" | "vector" | "keyword" | "hyde" | "hyde-hybrid";
+
 export interface RetrievalSettings {
-  sql: boolean;
-  vector: boolean;
-  web: boolean;
-  reranker: boolean;
+  mode: RetrievalMode;
   topK: number;
+  rrfK: number;
+  relax: boolean;
+  multiQuery: boolean;
+  numVariants: number;
+  queryExpansion: boolean;
+  rerank: boolean;
 }
 
 interface SettingsState {
@@ -38,7 +43,7 @@ export const useSettingsStore = create<SettingsState>()(
       theme: "dark",
       fontSize: "md",
       defaultModel: null,
-      retrieval: { sql: true, vector: true, web: true, reranker: true, topK: 5 },
+      retrieval: { mode: "hybrid", topK: 5, rrfK: 60, relax: true, multiQuery: false, numVariants: 3, queryExpansion: false, rerank: false },
 
       setTheme: (theme) => set({ theme }),
       setFontSize: (fontSize) => set({ fontSize }),

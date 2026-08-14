@@ -12,6 +12,7 @@ import { Type } from "typebox";
 import { searchHybrid } from "../retrieval/index.js";
 import type { HybridResult } from "../retrieval/index.js";
 import { TOOL_NAMES } from "../config/limits.js";
+import type { RetrievalStrategy } from "../retrieval/strategy.js";
 
 function formatResults(results: HybridResult[]): string {
   if (results.length === 0) {
@@ -40,34 +41,58 @@ export const kbSearchTool = defineTool({
     query: Type.String({ description: "The search query, e.g. 'lg tv wifi reset'" }),
     topK: Type.Optional(Type.Number({ description: "Max results to return (1-10, default 5)" })),
   }),
-  execute: async (_toolCallId, params, signal) => {
-    signal?.throwIfAborted();
-    const topK = Math.min(Math.max(params.topK ?? 5, 1), 10);
-    const { results, queryTimeMs } = await searchHybrid({
-      query: params.query,
-      topK,
-      sourceTypes: ["kb"],
-    });
-    signal?.throwIfAborted();
-
-    const sources = results.map((r) => ({
-      type: r.source.type,
-      title: r.source.docName ?? r.source.title ?? null,
-      sectionPath: r.source.sectionPath ?? null,
-      url: r.source.url ?? null,
-      score: r.score,
-    }));
-
-    return {
-      content: [{ type: "text", text: formatResults(results) }],
-      details: {
-        tool: TOOL_NAMES.kbSearch,
-        query: params.query,
-        count: results.length,
-        queryTimeMs,
-        sources,
-        mode: process.env.RETRIEVAL_MODE ?? "mock",
-      },
-    };
-  },
+  execute: async (_toolCallId, params, signal) => executeKbSearch(params, signal),
 });
+
+/**
+ * Build a kb_search tool bound to a specific retrieval strategy (Phase 5c).
+ * Used by the specialist sub-agents so the UI's retrieval config reaches the
+ * retrieval layer without any shared mutable state.
+ */
+export function buildKbTool(strategy: RetrievalStrategy): typeof kbSearchTool {
+  return defineTool({
+    name: TOOL_NAMES.kbSearch,
+    label: "Knowledge Base Search",
+    description: kbSearchTool.description,
+    parameters: kbSearchTool.parameters as never,
+    execute: async (_toolCallId, params, signal) =>
+      executeKbSearch(params, signal, strategy),
+  });
+}
+
+async function executeKbSearch(
+  params: { query: string; topK?: number },
+  signal?: AbortSignal,
+  strategy?: RetrievalStrategy,
+) {
+  signal?.throwIfAborted();
+  const topK = Math.min(Math.max(params.topK ?? strategy?.topK ?? 5, 1), 10);
+  const { results, queryTimeMs, relaxed } = await searchHybrid({
+    query: params.query,
+    topK,
+    sourceTypes: ["kb"],
+    strategy,
+  });
+  signal?.throwIfAborted();
+
+  const sources = results.map((r) => ({
+    type: r.source.type,
+    title: r.source.docName ?? r.source.title ?? null,
+    sectionPath: r.source.sectionPath ?? null,
+    url: r.source.url ?? null,
+    score: r.score,
+  }));
+
+  return {
+    content: [{ type: "text" as const, text: formatResults(results) }],
+    details: {
+      tool: TOOL_NAMES.kbSearch,
+      query: params.query,
+      count: results.length,
+      queryTimeMs,
+      sources,
+      ...(relaxed ? { relaxed: true } : {}),
+      mode: strategy?.mode ?? "hybrid",
+    },
+  };
+}

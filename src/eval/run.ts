@@ -42,11 +42,16 @@ function foundInResults(source: "kb" | "sql", expectedItem: string, results: Hyb
   return results.some((r) => matchesExpected(source, expectedItem, r));
 }
 
-export async function runEval(): Promise<CaseReport[]> {
+export async function runEval(strategyInput?: Parameters<typeof searchHybrid>[0]["strategy"]): Promise<CaseReport[]> {
   const reports: CaseReport[] = [];
 
   for (const c of GOLDEN_SET) {
-    const { results } = await searchHybrid({ query: c.query, topK: c.topK, sourceTypes: [c.source] });
+    const { results } = await searchHybrid({
+      query: c.query,
+      topK: c.topK,
+      sourceTypes: [c.source],
+      strategy: strategyInput,
+    });
     const retrieved = results.map(resultId);
 
     // recall@k: fraction of expected items found anywhere in the top-k results
@@ -104,7 +109,12 @@ function printReport(reports: CaseReport[]): void {
 }
 
 async function main(): Promise<void> {
-  const reports = await runEval();
+  const flag = (name: string): string | undefined => {
+    const i = process.argv.indexOf(name);
+    return i >= 0 ? process.argv[i + 1] : undefined;
+  };
+  const strategyInput = flag("--strategy") ? { mode: flag("--strategy") } : undefined;
+  const reports = await runEval(strategyInput as never);
   printReport(reports);
   await mkdir("reports", { recursive: true });
   await writeFile(

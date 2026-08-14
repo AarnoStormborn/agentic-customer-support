@@ -72,6 +72,8 @@ export const api = {
     conversationId?: string;
     ticketId?: number;
     metadata?: Record<string, unknown>;
+    /** Retrieval strategy knobs (Phase 5c) — forwarded to kb_search. */
+    retrieval?: Record<string, unknown>;
   }) =>
     request<ChatStartResponse>("/api/chat", {
       method: "POST",

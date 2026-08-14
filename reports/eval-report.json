@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-13T19:43:53.709Z",
+  "generatedAt": "2026-08-14T12:54:17.954Z",
   "config": {
     "embeddingMode": "hash"
   },
@@ -11,16 +11,16 @@
       "note": "LG OLED manual — network/connection section",
       "topK": 5,
       "retrieved": [
-        "kb:lg_oled_55b9pla.pdf",
-        "kb:lg_oled_55b9pla.pdf",
         "kb:sony_xperia_1v_manual.pdf",
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_55b9pla.pdf",
         "kb:lg_oled_55b9pla.pdf",
         "kb:lg_oled_55b9pla.pdf"
       ],
       "score": {
         "recallAtK": 1,
         "precisionAtK": 0.8,
-        "mrr": 1,
+        "mrr": 0.5,
         "hit": true
       }
     },
@@ -35,11 +35,11 @@
         "kb:sony_xperia_1v_manual.pdf",
         "kb:sony_xperia_1v_manual.pdf",
         "kb:sony_xperia_1v_manual.pdf",
-        "kb:sony_xperia_1v_manual.pdf"
+        "kb:lg_oled_55b9pla.pdf"
       ],
       "score": {
         "recallAtK": 1,
-        "precisionAtK": 1,
+        "precisionAtK": 0.8,
         "mrr": 1,
         "hit": true
       }

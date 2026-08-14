@@ -131,37 +131,31 @@ export default function SettingsView() {
         </section>
 
         <section className="space-y-2">
-          <h2 className="text-xs font-medium uppercase tracking-wide text-text-dim">
-            Retrieval toggles
-          </h2>
+          <h2 className="text-xs font-medium uppercase tracking-wide text-text-dim">Retrieval strategy</h2>
           <p className="text-xs text-text-dim">
-            Preferences stored locally (v1). Wiring these into the agent's tool config is a
-            future phase.
+            Sent with every chat message (Phase 5c). <span className="font-mono">hybrid</span> is the
+            default; <span className="font-mono">hyde</span> embeds a hypothetical answer,{" "}
+            <span className="font-mono">vector</span>/<span className="font-mono">keyword</span> are
+            single-retriever modes, <span className="font-mono">multiQuery</span> fuses several
+            paraphrases. Compare modes: <span className="font-mono">npm run eval -- --strategy &lt;mode&gt;</span>
           </p>
-          <Toggle
-            label="SQL tickets"
-            hint="Query the ticket store"
-            checked={retrieval.sql}
-            onChange={(v) => setRetrieval({ sql: v })}
-          />
-          <Toggle
-            label="Vector manuals"
-            hint="Search the knowledge base"
-            checked={retrieval.vector}
-            onChange={(v) => setRetrieval({ vector: v })}
-          />
-          <Toggle
-            label="Web search"
-            hint="Fall back to the web"
-            checked={retrieval.web}
-            onChange={(v) => setRetrieval({ web: v })}
-          />
-          <Toggle
-            label="Reranker"
-            hint="Re-rank hybrid results"
-            checked={retrieval.reranker}
-            onChange={(v) => setRetrieval({ reranker: v })}
-          />
+
+          <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2.5">
+            <span>
+              <span className="block text-sm text-text">Mode</span>
+              <span className="block text-xs text-text-dim">Retrieval pipeline for the knowledge base</span>
+            </span>
+            <select
+              value={retrieval.mode}
+              onChange={(e) => setRetrieval({ mode: e.target.value as typeof retrieval.mode })}
+              className="h-8 w-36 rounded-lg border border-border bg-surface-2 px-2 font-mono text-sm text-text focus:border-accent focus:outline-none"
+            >
+              {(["hybrid", "vector", "keyword", "hyde", "hyde-hybrid"] as const).map((m) => (
+                <option key={m} value={m}>{m}</option>
+              ))}
+            </select>
+          </label>
+
           <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2.5">
             <span className="text-sm text-text">Top-K results</span>
             <input
@@ -169,10 +163,52 @@ export default function SettingsView() {
               min={1}
               max={10}
               value={retrieval.topK}
-              onChange={(e) => setRetrieval({ topK: Math.min(10, Math.max(1, Number(e.target.value) || 5)) })}
-              className="h-8 w-20 rounded-md border border-border bg-canvas px-2 text-sm text-text focus:border-accent focus:outline-none"
+              onChange={(e) => setRetrieval({ topK: Number(e.target.value) })}
+              className="h-8 w-20 rounded-lg border border-border bg-surface-2 px-2 text-right font-mono text-sm text-text focus:border-accent focus:outline-none"
             />
           </label>
+
+          <label className="flex items-center justify-between gap-3 rounded-lg border border-border bg-surface px-3 py-2.5">
+            <span>
+              <span className="block text-sm text-text">RRF constant (k)</span>
+              <span className="block text-xs text-text-dim">Higher = rank position dominates fusion</span>
+            </span>
+            <input
+              type="range"
+              min={10}
+              max={120}
+              step={5}
+              value={retrieval.rrfK}
+              onChange={(e) => setRetrieval({ rrfK: Number(e.target.value) })}
+              className="w-32 accent-indigo-500"
+            />
+            <span className="w-10 text-right font-mono text-sm text-text">{retrieval.rrfK}</span>
+          </label>
+
+          <Toggle
+            label="Query relaxation"
+            hint="Auto-drop unmatched FTS terms (keeps results when one word is missing)"
+            checked={retrieval.relax}
+            onChange={(v) => setRetrieval({ relax: v })}
+          />
+          <Toggle
+            label="Multi-query"
+            hint={`LLM paraphrases the query into ${retrieval.numVariants} variants, retrieves each, fuses`}
+            checked={retrieval.multiQuery}
+            onChange={(v) => setRetrieval({ multiQuery: v })}
+          />
+          <Toggle
+            label="Query expansion"
+            hint="Rule-based synonyms appended (no LLM cost)"
+            checked={retrieval.queryExpansion}
+            onChange={(v) => setRetrieval({ queryExpansion: v })}
+          />
+          <Toggle
+            label="Rerank"
+            hint="Cross-encoder rerank of candidates (needs COHERE_API_KEY; skipped otherwise)"
+            checked={retrieval.rerank}
+            onChange={(v) => setRetrieval({ rerank: v })}
+          />
         </section>
 
         <section className="space-y-2">
