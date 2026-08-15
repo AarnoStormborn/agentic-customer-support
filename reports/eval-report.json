@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-15T15:35:37.351Z",
+  "generatedAt": "2026-08-15T16:12:36.543Z",
   "config": {
     "embeddingMode": "hash"
   },
@@ -51,17 +51,17 @@
       "note": "Kenmore fridge use & care guide",
       "topK": 5,
       "retrieved": [
-        "kb:kenmore_fridge_25331115308.pdf",
-        "kb:kenmore_fridge_25331115308.pdf",
-        "kb:kenmore_fridge_25331115308.pdf",
-        "kb:kenmore_fridge_25331115308.pdf",
-        "kb:kenmore_fridge_25331115308.pdf"
+        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf"
       ],
       "score": {
-        "recallAtK": 1,
-        "precisionAtK": 1,
-        "mrr": 1,
-        "hit": true
+        "recallAtK": 0,
+        "precisionAtK": 0,
+        "mrr": 0,
+        "hit": false
       }
     },
     {
@@ -100,6 +100,146 @@
       "score": {
         "recallAtK": 1,
         "precisionAtK": 0.8,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-kenmore-washer",
+      "query": "kenmore washer spin cycle not draining",
+      "source": "kb",
+      "note": "Kenmore washer manual — drain/spin",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_29522_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-dishwasher",
+      "query": "kenmore dishwasher not cleaning dishes properly",
+      "source": "kb",
+      "note": "Kenmore dishwasher manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_15791_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_630.1390_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-clothes-dryer",
+      "query": "clothes dryer not heating up",
+      "source": "kb",
+      "note": "Kenmore clothes dryer manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_134914900_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.9656_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.6705_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-microwave",
+      "query": "microwave oven not heating food",
+      "source": "kb",
+      "note": "Panasonic microwave manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_790.45_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.45_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.7011_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 0,
+        "precisionAtK": 0,
+        "mrr": 0,
+        "hit": false
+      }
+    },
+    {
+      "id": "kb-range",
+      "query": "electric range oven temperature calibration",
+      "source": "kb",
+      "note": "Kenmore range manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_790.75602_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.7131_Range_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-laptop",
+      "query": "hp pavilion battery replacement",
+      "source": "kb",
+      "note": "HP Pavilion notebook guide",
+      "topK": 5,
+      "retrieved": [
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-refrigerator-water",
+      "query": "refrigerator water dispenser not working",
+      "source": "kb",
+      "note": "Kenmore/LG fridge manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
         "mrr": 1,
         "hit": true
       }
