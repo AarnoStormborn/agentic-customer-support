@@ -839,3 +839,30 @@ Lessons:
   in vector-only mode — build the FROM/score expressions per mode.
 - `hybrid` vs `vector` identical here because hash-embeddings ≈ token overlap;
   with real embeddings + a bigger corpus the difference will show.
+
+---
+
+## 27. Offline embeddings (Ollama nomic-embed-text)
+
+The system now supports three embedding backends via EMBEDDING_BACKEND
+(auto | openai | ollama | hash): OpenAI (key), **local Ollama** (default when no
+key — nomic-embed-text, 768-dim, fully offline, no network egress), and the
+deterministic hash fallback.
+
+How it works:
+- `embed.ts` picks the backend; Ollama via `POST /api/embed` (batch input),
+  with a graceful fallback to hash if the server is down.
+- **Dimension is backend-dependent** (OpenAI 1536/3072, nomic 768). The schema
+  pins vector(1536), so `migrate.ts` **reconciles** the column + HNSW index to
+  the active backend's dim (drop + re-add — pgvector <0.7 can't resize via cast),
+  then `npm run ingest -- --manuals` re-embeds (282 chunks, seconds).
+- Gotcha: `pg_attribute.atttypmod` for a vector(n) column equals **n** (no +4
+  header offset) — a wrong -4 caused a pointless drop/recreate on every migrate.
+
+Measured on the golden set (real 768-dim semantic vectors vs the hash fallback):
+precision improved across modes — hybrid/vector 0.93 → 1.00, hyde 0.80 → 1.00.
+The corpus is small (3 manuals) so recall was already at ceiling; the technique
+differences will widen with more data.
+
+To use: `ollama pull nomic-embed-text` once; the server runs locally
+(EMBEDDING_BACKEND=auto already prefers it when OPENAI_API_KEY is unset).

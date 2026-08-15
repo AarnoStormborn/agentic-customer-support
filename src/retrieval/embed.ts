@@ -14,6 +14,7 @@
  */
 import OpenAI from "openai";
 import "dotenv/config";
+import { embedViaOllama, OLLAMA_DIM, ollamaConfigured } from "./embed-ollama.js";
 
 const BATCH_SIZE = 100;
 const MAX_RETRIES = 5;
@@ -21,19 +22,43 @@ const RETRY_BASE_MS = 1000;
 
 export const EMBEDDING_MODEL: string = process.env.EMBEDDING_MODEL ?? "text-embedding-3-small";
 
-/** Vector dimension must match `vector(n)` in schema.sql. */
+export type EmbeddingBackend = "openai" | "ollama" | "hash";
+
+/**
+ * Which embedding backend to use. `EMBEDDING_BACKEND` overrides; "auto" picks
+ * openai (if key) → ollama (if configured/local) → hash (deterministic fallback).
+ */
+export function embeddingBackend(): EmbeddingBackend {
+  const explicit = process.env.EMBEDDING_BACKEND;
+  if (explicit === "openai" || explicit === "ollama" || explicit === "hash") return explicit;
+  if (process.env.OPENAI_API_KEY) return "openai";
+  return "ollama"; // local by default; embedTexts falls back to hash if the server is down
+}
+
+/**
+ * Vector dimension must match `vector(n)` in schema.sql (reconciled by migrate).
+ * EMBEDDING_DIM overrides; otherwise derived from the active backend.
+ */
 export function embeddingDim(): number {
+  if (process.env.EMBEDDING_DIM) {
+    const n = Number(process.env.EMBEDDING_DIM);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  const backend = embeddingBackend();
+  if (backend === "ollama") return OLLAMA_DIM;
+  if (backend === "hash") return 1536;
   const m = EMBEDDING_MODEL.toLowerCase();
-  if (m.includes("large") || m.includes("3-large") || m.includes("002") && m.includes("ada")) return 3072;
+  if (m.includes("large") || (m.includes("002") && m.includes("ada"))) return 3072;
   return 1536; // text-embedding-3-small / text-embedding-ada-002
 }
 
 export function embeddingsEnabled(): boolean {
-  return Boolean(process.env.OPENAI_API_KEY);
+  return embeddingBackend() !== "hash";
 }
 
 let client: OpenAI | null = null;
 function getClient(): OpenAI | null {
+  if (process.env.EMBEDDING_BACKEND === "ollama" || process.env.EMBEDDING_BACKEND === "hash") return null;
   if (!process.env.OPENAI_API_KEY) return null;
   client ??= new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
   return client;
@@ -41,7 +66,25 @@ function getClient(): OpenAI | null {
 
 /** Embed a list of texts. Empty list → []. Result order matches input order. */
 export async function embedTexts(texts: string[]): Promise<number[][]> {
+  if (texts.length === 0) return [];
   const dim = embeddingDim();
+  const backend = embeddingBackend();
+
+  if (backend === "ollama") {
+    try {
+      const out: number[][] = [];
+      for (let i = 0; i < texts.length; i += BATCH_SIZE) {
+        out.push(...(await embedViaOllama(texts.slice(i, i + BATCH_SIZE))));
+      }
+      return out;
+    } catch (err) {
+      console.warn(
+        `[embed] ollama failed (${(err as Error).message}) — falling back to hash embeddings`,
+      );
+      return texts.map((t) => hashEmbedding(t, dim));
+    }
+  }
+
   const c = getClient();
   if (!c) return texts.map((t) => hashEmbedding(t, dim));
 
