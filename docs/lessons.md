@@ -866,3 +866,34 @@ differences will widen with more data.
 
 To use: `ollama pull nomic-embed-text` once; the server runs locally
 (EMBEDDING_BACKEND=auto already prefers it when OPENAI_API_KEY is unset).
+
+---
+
+## 28. Scaling the KB 12× (282 → 3,378 chunks) — techniques finally differentiate
+
+Provisioned 33 more manuals (scripts/provision-manuals.sh: verified direct PDFs +
+archive.org appliance discovery via advancedsearch API, filtered against dead
+mirror identifiers like manualsbase/manualzilla). Corpus: 3 → 36 manuals,
+174 MB, 3,378 chunks, embedded offline (Ollama 768-dim).
+
+Measured on a 13-case golden set (added washer/dryer/dishwasher/microwave/range/
+laptop cases):
+
+| mode | recall | precision | takeaway |
+|---|---|---|---|
+| hybrid | 0.92 | 0.87 | default, solid |
+| vector | 0.92 | 0.87 | vector side dominates; FTS adds nothing here |
+| keyword | 0.77 | 0.77 | **collapses at scale** — misses lg-wifi/ice/microwave; relaxed single-term variants flood with noise from 36 manuals |
+| hyde | 0.85 | 0.85 | **HYDE underperforms** — the generated hypothesis adds noise on short appliance queries |
+| hyde-hybrid | 0.92 | 0.87 | ≈ hybrid; hypothesis-FTS fusion cancels out |
+
+multiQuery / queryExpansion: no change on well-formed golden queries (they help
+on poorly-worded user queries, which golden sets aren't).
+
+Lessons:
+- **Small corpora hide technique differences** — 3 manuals made everything 100%.
+  Scale is what separates them (and keyword degrades as noise grows).
+- HYDE's value is corpus/query-dependent: it shines when the query is far from
+  the documents (paraphrase-heavy); short appliance questions don't benefit.
+- archive.org discovery: filter out dead mirror prefixes or you download 146-byte
+  error pages; scanned/image PDFs yield 0 text (pdf-parse can't OCR).
