@@ -926,3 +926,23 @@ out of credits ("credit balance too low"). Empty hypotheses → vector search on
 - `PREFERRED_SPECIALIST` gained opencode-go/minimax-m3 as a fallback.
 - Also: `PI_MODEL` was exported in the shell env, shadowing .env (dotenv never
   overrides set vars). Unset it for this shell.
+
+---
+
+## 30. OCR for scanned manuals + paraphrase eval
+
+**OCR pipeline** (scripts/ocr-pdf.sh): pdftoppm (poppler) → per-page PNG → tesseract
+→ text with `=== PAGE BREAK ===` separators. Ingest now accepts `.txt`
+(parseTextFile) alongside `.pdf`. Reclaimed the 2 Panasonic microwave manuals
+(28+ pages of pure images, 0 chars → 224k OCR chars → ~280 chunks). Microwave
+golden cases restored; full eval now 100% recall / 0.95 precision across 28 cases.
+
+**Paraphrase-heavy eval** (--set paraphrase, 5 cases where the query words differ
+from the manual): hybrid is deterministic 1.00/1.00 — the offline nomic
+embeddings already bridge paraphrase gaps. HYDE/multiQuery fluctuate
+(0.90-1.00) with LLM latency/cost and no stable gain. Conclusion: on this
+corpus, **hybrid + good embeddings is hard to beat**; HYDE/multiQuery's value
+would need a corpus where queries sit far from documents AND embeddings are weak.
+
+Note: OCR text is noisy (garbled scan text), but the vector side tolerates it —
+the OCR'd manuals ranked #1-2 for microwave queries.

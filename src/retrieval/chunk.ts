@@ -106,6 +106,28 @@ export async function parsePdf(filePath: string): Promise<ParsedDocument> {
   }
 }
 
+/**
+ * Parse a plain-text file (e.g. OCR output from scripts/ocr-pdf.sh) into pages.
+ * `=== PAGE BREAK ===` lines separate pages; the rest is text.
+ */
+export async function parseTextFile(filePath: string): Promise<ParsedDocument> {
+  const text = await readFile(filePath, "utf8");
+  const blocks = text.split(/\n\s*=== PAGE BREAK ===\s*\n/);
+  const pages: ParsedPage[] = blocks
+    .map((b, i) => ({ num: i + 1, text: b.trim() }))
+    .filter((p) => p.text.length > 0);
+  if (pages.length === 0) {
+    throw new Error(`empty text file (${filePath})`);
+  }
+  return {
+    docName: basename(filePath),
+    filePath,
+    pageCount: pages.length,
+    totalChars: pages.reduce((n, p) => n + p.text.length, 0),
+    pages,
+  };
+}
+
 /** Chunk a parsed document into structural sections. Deterministic. */
 export function chunkDocument(doc: ParsedDocument, opts?: ChunkOptions): DocumentChunk[] {
   const { maxChars, targetChars, overlapFraction, minChars } = { ...DEFAULT_OPTS, ...opts };
