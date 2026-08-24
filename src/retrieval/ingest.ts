@@ -20,7 +20,7 @@ import "dotenv/config";
 import { getPool } from "../db/pool.js";
 import { embedTexts, embeddingsEnabled, EMBEDDING_MODEL, embeddingDim } from "./embed.js";
 import { parseCsv } from "./csv.js";
-import { parsePdf, chunkDocument, type DocumentChunk } from "./chunk.js";
+import { parsePdf, parseTextFile, chunkDocument, type DocumentChunk } from "./chunk.js";
 
 // ---------------------------------------------------------------------------
 // Types & config
@@ -288,9 +288,11 @@ export async function ingestManuals(dir: string, opts: ManualsOptions = {}): Pro
   const dryRun = opts.dryRun ?? false;
   if (!dryRun) await preflight("document_chunks");
 
-  const files = (await readdir(dir)).filter((f) => extname(f).toLowerCase() === ".pdf").sort();
+  const files = (await readdir(dir))
+    .filter((f) => [".pdf", ".txt"].includes(extname(f).toLowerCase()))
+    .sort();
   const targets = opts.only ? files.filter((f) => f === opts.only) : files;
-  if (targets.length === 0) throw new Error(`no PDFs in ${dir}${opts.only ? ` matching "${opts.only}"` : ""}`);
+  if (targets.length === 0) throw new Error(`no PDFs/TXT in ${dir}${opts.only ? ` matching "${opts.only}"` : ""}`);
 
   const failures: string[] = [];
   let chunksTotal = 0;
@@ -300,7 +302,8 @@ export async function ingestManuals(dir: string, opts: ManualsOptions = {}): Pro
     const path = join(dir, file);
     try {
       log(`parsing ${file} …`);
-      const parsed = await parsePdf(path);
+      const parsed =
+        extname(file).toLowerCase() === ".pdf" ? await parsePdf(path) : await parseTextFile(path);
       const chunks = chunkDocument(parsed);
       log(`  ${parsed.pageCount} pages, ${parsed.totalChars} chars → ${chunks.length} chunks`);
 

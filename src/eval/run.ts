@@ -44,6 +44,7 @@ function foundInResults(source: "kb" | "sql", expectedItem: string, results: Hyb
 
 export interface EvalFilter {
   sloppy?: boolean; // undefined = all cases
+  paraphrase?: boolean; // only (or none-of) paraphrase-heavy cases
 }
 
 export async function runEval(
@@ -52,9 +53,11 @@ export async function runEval(
 ): Promise<CaseReport[]> {
   const reports: CaseReport[] = [];
 
-  const cases = GOLDEN_SET.filter((c) =>
-    filter.sloppy === undefined ? true : Boolean(c.sloppy) === filter.sloppy,
-  );
+  const cases = GOLDEN_SET.filter((c) => {
+    if (filter.sloppy !== undefined && Boolean(c.sloppy) !== filter.sloppy) return false;
+    if (filter.paraphrase === true && !c.paraphrase) return false;
+    return true;
+  });
   for (const c of cases) {
     const { results } = await searchHybrid({
       query: c.query,
@@ -125,7 +128,11 @@ async function main(): Promise<void> {
   };
   const strategyInput = flag("--strategy") ? { mode: flag("--strategy") } : undefined;
   const sloppyFlag = flag("--set");
-  const filter = sloppyFlag === "sloppy" ? { sloppy: true } : sloppyFlag === "clean" ? { sloppy: false } : {};
+  const filter =
+    sloppyFlag === "sloppy" ? { sloppy: true }
+    : sloppyFlag === "clean" ? { sloppy: false }
+    : sloppyFlag === "paraphrase" ? { paraphrase: true }
+    : {};
   const reports = await runEval(strategyInput as never, filter);
   printReport(reports);
   await mkdir("reports", { recursive: true });

@@ -20,6 +20,8 @@ export interface GoldenCase {
   /** Sloppy (real-user-style) query — typos/filler/grammar. multiQuery/expansion
    *  are expected to help most on these; the comparison is run separately. */
   sloppy?: boolean;
+  /** Paraphrase-heavy — query wording differs sharply from the docs. */
+  paraphrase?: boolean;
 }
 
 export const GOLDEN_SET: GoldenCase[] = [
@@ -202,6 +204,72 @@ export const GOLDEN_SET: GoldenCase[] = [
     topK: 5,
     note: "fragment + missing words — paired with kb-range",
     sloppy: true,
+  },
+
+  // --- paraphrase-heavy — query words DIFFER from the manual's words. This is
+  // where HYDE/multiQuery should genuinely help (embedding the query verbatim
+  // sits far from the docs; a generated hypothesis / paraphrase bridges it). ---
+  {
+    id: "kb-microwave",
+    query: "microwave oven not heating food",
+    source: "kb",
+    expected: ["panasonic"],
+    topK: 5,
+    note: "Panasonic microwave manual (OCR'd)",
+  },
+  {
+    id: "kb-microwave-sloppy",
+    query: "microwave isnt heatin my food wats wrong",
+    source: "kb",
+    expected: ["panasonic"],
+    topK: 5,
+    note: "no apostrophes + typos — OCR'd Panasonic microwave manual",
+    sloppy: true,
+  },
+  {
+    id: "kb-washer-spin-paraphrase",
+    query: "clothes come out soaking wet after the spin cycle won't move",
+    source: "kb",
+    expected: ["Washer"],
+    topK: 5,
+    note: "says 'soaking wet / spin won't move' — manual says 'drain/spin'; paraphrase bridge",
+    paraphrase: true,
+  },
+  {
+    id: "kb-dryer-keeps-shutting-paraphrase",
+    query: "dryer turns itself off mid-cycle before clothes are dry",
+    source: "kb",
+    expected: ["Dryer"],
+    topK: 5,
+    note: "manual says 'thermal overload / not heating'; user says 'keeps shutting off'",
+    paraphrase: true,
+  },
+  {
+    id: "kb-fridge-too-warm-paraphrase",
+    query: "food keeps going bad fast the fridge isnt cold enough",
+    source: "kb",
+    expected: ["Refrigerator"],
+    topK: 5,
+    note: "manual says 'temperature control / cooling'; user says 'food goes bad / not cold'",
+    paraphrase: true,
+  },
+  {
+    id: "kb-dishwasher-suds-paraphrase",
+    query: "too many bubbles overflowing out the dishwasher",
+    source: "kb",
+    expected: ["Dishwasher"],
+    topK: 5,
+    note: "manual says 'suds/oversudsing'; user says 'too many bubbles overflowing'",
+    paraphrase: true,
+  },
+  {
+    id: "kb-laptop-wont-power-on-paraphrase",
+    query: "laptop screen stays black when i press the power button",
+    source: "kb",
+    expected: ["hp_pavilion", "dell"],
+    topK: 5,
+    note: "manual says 'no power / boot'; user describes symptom not named in manual",
+    paraphrase: true,
   },
 ];
 

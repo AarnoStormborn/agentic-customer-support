@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-24T12:07:42.408Z",
+  "generatedAt": "2026-08-24T14:55:53.995Z",
   "config": {
     "embeddingMode": "hash"
   },
@@ -420,6 +420,146 @@
       "score": {
         "recallAtK": 1,
         "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-microwave",
+      "query": "microwave oven not heating food",
+      "source": "kb",
+      "note": "Panasonic microwave manual (OCR'd)",
+      "topK": 5,
+      "retrieved": [
+        "kb:panasonic_nns697_ocr.txt",
+        "kb:panasonic_nnl531_ocr.txt",
+        "kb:panasonic_nnl531_ocr.txt",
+        "kb:panasonic_nns697_ocr.txt",
+        "kb:panasonic_nnl531_ocr.txt"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-microwave-sloppy",
+      "query": "microwave isnt heatin my food wats wrong",
+      "source": "kb",
+      "note": "no apostrophes + typos — OCR'd Panasonic microwave manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:panasonic_nnl531_ocr.txt",
+        "kb:panasonic_nnl531_ocr.txt",
+        "kb:panasonic_nns697_ocr.txt",
+        "kb:panasonic_nns697_ocr.txt",
+        "kb:panasonic_nnl531_ocr.txt"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-washer-spin-paraphrase",
+      "query": "clothes come out soaking wet after the spin cycle won't move",
+      "source": "kb",
+      "note": "says 'soaking wet / spin won't move' — manual says 'drain/spin'; paraphrase bridge",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.9656_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.9656_Clothes_Dryer_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 0.6,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-dryer-keeps-shutting-paraphrase",
+      "query": "dryer turns itself off mid-cycle before clothes are dry",
+      "source": "kb",
+      "note": "manual says 'thermal overload / not heating'; user says 'keeps shutting off'",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_W10034880B_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.6705_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.9656_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-fridge-too-warm-paraphrase",
+      "query": "food keeps going bad fast the fridge isnt cold enough",
+      "source": "kb",
+      "note": "manual says 'temperature control / cooling'; user says 'food goes bad / not cold'",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-dishwasher-suds-paraphrase",
+      "query": "too many bubbles overflowing out the dishwasher",
+      "source": "kb",
+      "note": "manual says 'suds/oversudsing'; user says 'too many bubbles overflowing'",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1375_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_15791_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1648_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-laptop-wont-power-on-paraphrase",
+      "query": "laptop screen stays black when i press the power button",
+      "source": "kb",
+      "note": "manual says 'no power / boot'; user describes symptom not named in manual",
+      "topK": 5,
+      "retrieved": [
+        "kb:dell_xps13_9310_service_manual.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:dell_xps13_l321x_owner_manual.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:lg_oled_55b9pla.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 0.8,
         "mrr": 1,
         "hit": true
       }
