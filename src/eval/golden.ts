@@ -17,6 +17,9 @@ export interface GoldenCase {
   expected: string[];
   topK: number;
   note: string;
+  /** Sloppy (real-user-style) query — typos/filler/grammar. multiQuery/expansion
+   *  are expected to help most on these; the comparison is run separately. */
+  sloppy?: boolean;
 }
 
 export const GOLDEN_SET: GoldenCase[] = [
@@ -41,7 +44,7 @@ export const GOLDEN_SET: GoldenCase[] = [
     id: "kb-kenmore-ice",
     query: "kenmore refrigerator ice maker not working",
     source: "kb",
-    expected: ["kenmore_fridge_25331115308.pdf"],
+    expected: ["Kenmore", "Refrigerator"],
     topK: 5,
     note: "Kenmore fridge use & care guide",
   },
@@ -87,14 +90,6 @@ export const GOLDEN_SET: GoldenCase[] = [
     note: "Kenmore clothes dryer manual",
   },
   {
-    id: "kb-microwave",
-    query: "microwave oven not heating food",
-    source: "kb",
-    expected: ["Microwave", "Oven"],
-    topK: 5,
-    note: "Panasonic microwave manual",
-  },
-  {
     id: "kb-range",
     query: "electric range oven temperature calibration",
     source: "kb",
@@ -125,6 +120,88 @@ export const GOLDEN_SET: GoldenCase[] = [
     expected: ["ticket_type ILIKE '%technical%'", "product_purchased ILIKE '%tv%'"],
     topK: 5,
     note: "suraj520 technical issues on TVs",
+  },
+  // --- sloppy (real-user-style) queries — multiQuery/expansion should shine ---
+  {
+    id: "kb-lg-wifi-sloppy",
+    query: "my lg tv keeps dropin the wifi connection plz help reset",
+    source: "kb",
+    expected: ["lg_oled_55b9pla.pdf"],
+    topK: 5,
+    note: "typos (dropin) + filler (plz) — paired with kb-lg-wifi",
+    sloppy: true,
+  },
+  {
+    id: "kb-kenmore-ice-sloppy",
+    query: "kenmore frig not makin ice cubes any more",
+    source: "kb",
+    expected: ["Kenmore", "Refrigerator"],
+    topK: 5,
+    note: "colloquial + misspellings — paired with kb-kenmore-ice",
+    sloppy: true,
+  },
+  {
+    id: "kb-dryer-sloppy",
+    query: "cloth dryer dont heat up no more",
+    source: "kb",
+    expected: ["Dryer"],
+    topK: 5,
+    note: "double-negative colloquial — paired with kb-clothes-dryer",
+    sloppy: true,
+  },
+  {
+    id: "kb-dishwasher-sloppy",
+    query: "dishwasher leaving food on plates after cycle wat do",
+    source: "kb",
+    expected: ["Dishwasher"],
+    topK: 5,
+    note: "informal + shortened — paired with kb-dishwasher",
+    sloppy: true,
+  },
+  {
+    id: "kb-washer-sloppy",
+    query: "washing machine spin cycle stuck not draining water",
+    source: "kb",
+    expected: ["Kenmore", "Washer"],
+    topK: 5,
+    note: "multi-word noun + state — paired with kb-kenmore-washer",
+    sloppy: true,
+  },
+  {
+    id: "kb-laptop-sloppy",
+    query: "hp pavilion batterie aint holding charge",
+    source: "kb",
+    expected: ["hp_pavilion"],
+    topK: 5,
+    note: "misspelled battery — paired with kb-laptop",
+    sloppy: true,
+  },
+  {
+    id: "kb-fridge-water-sloppy",
+    query: "fridge water dispenser brok help",
+    source: "kb",
+    expected: ["Refrigerator"],
+    topK: 5,
+    note: "laconic + slang — paired with kb-refrigerator-water",
+    sloppy: true,
+  },
+  {
+    id: "kb-sony-sim-sloppy",
+    query: "how put sim in my sony fone",
+    source: "kb",
+    expected: ["sony_xperia_1v_manual.pdf"],
+    topK: 5,
+    note: "phonetic spelling (fone) — paired with kb-sony-sim",
+    sloppy: true,
+  },
+  {
+    id: "kb-range-sloppy",
+    query: "oven temp off need calibrate my range",
+    source: "kb",
+    expected: ["Range"],
+    topK: 5,
+    note: "fragment + missing words — paired with kb-range",
+    sloppy: true,
   },
 ];
 

@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-15T16:12:36.543Z",
+  "generatedAt": "2026-08-24T12:07:42.408Z",
   "config": {
     "embeddingMode": "hash"
   },
@@ -14,12 +14,12 @@
         "kb:lg_oled_55b9pla.pdf",
         "kb:lg_oled_55b9pla.pdf",
         "kb:lg_oled_55b9pla.pdf",
-        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_alt_croma.pdf",
         "kb:lg_oled_55b9pla.pdf"
       ],
       "score": {
         "recallAtK": 1,
-        "precisionAtK": 1,
+        "precisionAtK": 0.8,
         "mrr": 1,
         "hit": true
       }
@@ -51,17 +51,17 @@
       "note": "Kenmore fridge use & care guide",
       "topK": 5,
       "retrieved": [
-        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf",
         "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
-        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
         "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf",
+        "kb:kenmore_fridge_25331115308.pdf",
         "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf"
       ],
       "score": {
-        "recallAtK": 0,
-        "precisionAtK": 0,
-        "mrr": 0,
-        "hit": false
+        "recallAtK": 1,
+        "precisionAtK": 0.8,
+        "mrr": 1,
+        "hit": true
       }
     },
     {
@@ -112,7 +112,7 @@
       "topK": 5,
       "retrieved": [
         "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
-        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_15791_Dishwasher_User_Manual.pdf",
         "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
         "kb:archive_Kenmore_29522_Washer_User_Manual.pdf",
         "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf"
@@ -131,11 +131,11 @@
       "note": "Kenmore dishwasher manual",
       "topK": 5,
       "retrieved": [
-        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
-        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
         "kb:archive_Kenmore_15791_Dishwasher_User_Manual.pdf",
-        "kb:archive_Kenmore_630.1390_Dishwasher_User_Manual.pdf",
-        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf"
+        "kb:archive_Kenmore_15791_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1375_Dishwasher_User_Manual.pdf"
       ],
       "score": {
         "recallAtK": 1,
@@ -151,10 +151,10 @@
       "note": "Kenmore clothes dryer manual",
       "topK": 5,
       "retrieved": [
-        "kb:archive_Kenmore_134914900_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_W10034880B_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_W10034880B_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_W10034880B_Clothes_Dryer_User_Manual.pdf",
         "kb:archive_Kenmore_110.9656_Clothes_Dryer_User_Manual.pdf",
-        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf",
-        "kb:archive_Kenmore_110.6705_Clothes_Dryer_User_Manual.pdf",
         "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf"
       ],
       "score": {
@@ -165,37 +165,17 @@
       }
     },
     {
-      "id": "kb-microwave",
-      "query": "microwave oven not heating food",
-      "source": "kb",
-      "note": "Panasonic microwave manual",
-      "topK": 5,
-      "retrieved": [
-        "kb:archive_Kenmore_790.45_Range_User_Manual.pdf",
-        "kb:archive_Kenmore_790.45_Range_User_Manual.pdf",
-        "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf",
-        "kb:archive_Kenmore_790.7011_Range_User_Manual.pdf",
-        "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf"
-      ],
-      "score": {
-        "recallAtK": 0,
-        "precisionAtK": 0,
-        "mrr": 0,
-        "hit": false
-      }
-    },
-    {
       "id": "kb-range",
       "query": "electric range oven temperature calibration",
       "source": "kb",
       "note": "Kenmore range manual",
       "topK": 5,
       "retrieved": [
-        "kb:archive_Kenmore_790.75602_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf",
         "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf",
         "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf",
-        "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf",
-        "kb:archive_Kenmore_790.7131_Range_User_Manual.pdf"
+        "kb:archive_Kenmore_790.75602_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf"
       ],
       "score": {
         "recallAtK": 1,
@@ -231,10 +211,10 @@
       "note": "Kenmore/LG fridge manual",
       "topK": 5,
       "retrieved": [
-        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
-        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf",
         "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
-        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
         "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf"
       ],
       "score": {
@@ -256,6 +236,186 @@
         "sql:190",
         "sql:641",
         "sql:1211"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-lg-wifi-sloppy",
+      "query": "my lg tv keeps dropin the wifi connection plz help reset",
+      "source": "kb",
+      "note": "typos (dropin) + filler (plz) — paired with kb-lg-wifi",
+      "topK": 5,
+      "retrieved": [
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_55b9pla.pdf",
+        "kb:lg_oled_alt_croma.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 0.8,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-kenmore-ice-sloppy",
+      "query": "kenmore frig not makin ice cubes any more",
+      "source": "kb",
+      "note": "colloquial + misspellings — paired with kb-kenmore-ice",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_795.7977_Refrigerator_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-dryer-sloppy",
+      "query": "cloth dryer dont heat up no more",
+      "source": "kb",
+      "note": "double-negative colloquial — paired with kb-clothes-dryer",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_110.6705_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_134914900_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_110.8508_Clothes_Dryer_User_Manual.pdf",
+        "kb:archive_Kenmore_W10034880B_Clothes_Dryer_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-dishwasher-sloppy",
+      "query": "dishwasher leaving food on plates after cycle wat do",
+      "source": "kb",
+      "note": "informal + shortened — paired with kb-dishwasher",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1327_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1375_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_630.1390_Dishwasher_User_Manual.pdf",
+        "kb:archive_Kenmore_665.1375_Dishwasher_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-washer-sloppy",
+      "query": "washing machine spin cycle stuck not draining water",
+      "source": "kb",
+      "note": "multi-word noun + state — paired with kb-kenmore-washer",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_796.4147_Washer_User_Manual.pdf",
+        "kb:archive_Kenmore_29522_Washer_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-laptop-sloppy",
+      "query": "hp pavilion batterie aint holding charge",
+      "source": "kb",
+      "note": "misspelled battery — paired with kb-laptop",
+      "topK": 5,
+      "retrieved": [
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf",
+        "kb:hp_pavilion_notebook_guide.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-fridge-water-sloppy",
+      "query": "fridge water dispenser brok help",
+      "source": "kb",
+      "note": "laconic + slang — paired with kb-refrigerator-water",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_WIOI67097A_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_25352344300_Refrigerator_User_Manual.pdf",
+        "kb:archive_Kenmore_10653082300_Refrigerator_User_Manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-sony-sim-sloppy",
+      "query": "how put sim in my sony fone",
+      "source": "kb",
+      "note": "phonetic spelling (fone) — paired with kb-sony-sim",
+      "topK": 5,
+      "retrieved": [
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf",
+        "kb:sony_xperia_1v_manual.pdf"
+      ],
+      "score": {
+        "recallAtK": 1,
+        "precisionAtK": 1,
+        "mrr": 1,
+        "hit": true
+      }
+    },
+    {
+      "id": "kb-range-sloppy",
+      "query": "oven temp off need calibrate my range",
+      "source": "kb",
+      "note": "fragment + missing words — paired with kb-range",
+      "topK": 5,
+      "retrieved": [
+        "kb:archive_Kenmore_790._7260_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.75602_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.9003_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.7131_Range_User_Manual.pdf",
+        "kb:archive_Kenmore_790.75602_Range_User_Manual.pdf"
       ],
       "score": {
         "recallAtK": 1,

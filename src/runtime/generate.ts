@@ -19,7 +19,6 @@ import {
   SettingsManager,
 } from "@earendil-works/pi-coding-agent";
 import { resolveSpecialistModel } from "./model.js";
-
 const HYDE_PROMPT = (query: string) =>
   `Write a short, factual passage (2-4 sentences) that would answer this customer-support question. ` +
   `It should read like a knowledge-base/manual excerpt, using product terms. Do NOT answer the user ` +
@@ -44,8 +43,19 @@ async function runtime(): Promise<ModelRuntime> {
 async function oneShot(prompt: string): Promise<string> {
   const mr = await runtime();
   const available = await mr.getAvailable();
-  const model = available.find((m) => m.provider === "anthropic" && m.id.includes("haiku")) ?? available[0];
-  if (!model) throw new Error("no model available for generation");
+  const first = available[0];
+  if (!first) throw new Error("no model available for generation");
+  // Prefer the user-configured model (PI_MODEL — e.g. opencode-go/minimax-m3,
+  // which works), then the specialist chain, then any provider. The preference
+  // chain alone is unsafe: it would pick Anthropic (first in the list) even
+  // when Anthropic is out of credits.
+  const configured = process.env.PI_MODEL?.trim();
+  let model = configured
+    ? available.find((m) => `${m.provider}/${m.id}` === configured)
+    : undefined;
+  model ??= available.find((m) => m.provider === "opencode-go");
+  model ??= await resolveSpecialistModel(mr, first);
+  model ??= first;
 
   const loader = new DefaultResourceLoader({
     cwd: process.cwd(),

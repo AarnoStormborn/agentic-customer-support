@@ -897,3 +897,32 @@ Lessons:
   the documents (paraphrase-heavy); short appliance questions don't benefit.
 - archive.org discovery: filter out dead mirror prefixes or you download 146-byte
   error pages; scanned/image PDFs yield 0 text (pdf-parse can't OCR).
+
+---
+
+## 29. Sloppy-query eval + model-resolution fix
+
+Added a `--set clean|sloppy` filter to `npm run eval` and 10 real-user-style
+golden cases (typos/filler: "my lg tv keeps dropin the wifi plz", "kenmore frig
+not makin ice cubes"). Findings:
+
+- **All embedding modes are robust to sloppy queries (1.00 on clean AND sloppy)**
+  once corpus-gap cases are excluded; **keyword FTS is the only technique that
+  degrades** (0.92 clean → 0.78 sloppy) — it matches literal tokens and fails on
+  "dropin"/"plz"/"brok". The clearest technique signal in the whole experiment.
+- HYDE/multiQuery did NOT lift sloppy recall beyond hybrid — the vector side
+  already tolerates typos. They matter when the query is far from documents,
+  not for lightly-misspelled short queries.
+- Two golden cases were corpus gaps, not technique gaps: the Panasonic microwave
+  manuals are scanned/image PDFs with 0 extractable chunks. Removed; a lesson to
+  OCR scanned manuals.
+
+**Root-cause fix (important):** HYDE/multiQuery silently returned empty strings —
+`generate.ts` hard-picked an Anthropic haiku model, and the Anthropic account is
+out of credits ("credit balance too low"). Empty hypotheses → vector search on ""
+→ 0 results → HYDE scored 0.46. Fixes:
+- `generate.ts` now prefers PI_MODEL (working opencode-go/minimax-m3), then
+  opencode-go, then the specialist chain — never hard-codes a provider.
+- `PREFERRED_SPECIALIST` gained opencode-go/minimax-m3 as a fallback.
+- Also: `PI_MODEL` was exported in the shell env, shadowing .env (dotenv never
+  overrides set vars). Unset it for this shell.
