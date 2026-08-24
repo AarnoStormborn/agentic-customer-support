@@ -42,10 +42,20 @@ function foundInResults(source: "kb" | "sql", expectedItem: string, results: Hyb
   return results.some((r) => matchesExpected(source, expectedItem, r));
 }
 
-export async function runEval(strategyInput?: Parameters<typeof searchHybrid>[0]["strategy"]): Promise<CaseReport[]> {
+export interface EvalFilter {
+  sloppy?: boolean; // undefined = all cases
+}
+
+export async function runEval(
+  strategyInput?: Parameters<typeof searchHybrid>[0]["strategy"],
+  filter: EvalFilter = {},
+): Promise<CaseReport[]> {
   const reports: CaseReport[] = [];
 
-  for (const c of GOLDEN_SET) {
+  const cases = GOLDEN_SET.filter((c) =>
+    filter.sloppy === undefined ? true : Boolean(c.sloppy) === filter.sloppy,
+  );
+  for (const c of cases) {
     const { results } = await searchHybrid({
       query: c.query,
       topK: c.topK,
@@ -114,7 +124,9 @@ async function main(): Promise<void> {
     return i >= 0 ? process.argv[i + 1] : undefined;
   };
   const strategyInput = flag("--strategy") ? { mode: flag("--strategy") } : undefined;
-  const reports = await runEval(strategyInput as never);
+  const sloppyFlag = flag("--set");
+  const filter = sloppyFlag === "sloppy" ? { sloppy: true } : sloppyFlag === "clean" ? { sloppy: false } : {};
+  const reports = await runEval(strategyInput as never, filter);
   printReport(reports);
   await mkdir("reports", { recursive: true });
   await writeFile(

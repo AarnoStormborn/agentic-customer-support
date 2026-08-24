@@ -24,3 +24,7 @@ results.json
 
 # Git worktrees (parallel dev)
 .worktrees/
+
+# backups + local recap
+.env.bak
+.opencode/

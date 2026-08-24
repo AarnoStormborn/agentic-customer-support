@@ -17,6 +17,7 @@ const PREFERRED_SUPERVISOR = [
   "anthropic/claude-haiku-4-5",
   "openai/gpt-5",
   "google/gemini-3-pro",
+  "opencode-go/minimax-m3", // reliable local/agent provider — fallback when paid providers are out of credits
 ];
 
 /** Specialist (child session) preference: cheap + fast. */
@@ -27,6 +28,7 @@ const PREFERRED_SPECIALIST = [
   "openai/gpt-4.1-mini",
   "google/gemini-2.5-flash",
   "google/gemini-3-flash",
+  "opencode-go/minimax-m3", // working fallback
 ];
 
 export function modelId(m: ModelLike): string {
