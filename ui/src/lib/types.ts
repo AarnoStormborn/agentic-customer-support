@@ -171,3 +171,15 @@ export interface ChatHistoryResponse {
   createdAt: number;
   messages: SdkMessage[];
 }
+
+export interface CompareModeResult {
+  mode: string;
+  relaxed: boolean;
+  queryTimeMs: number;
+  top: { docName: string | null; sectionPath: string | null; score: number }[];
+}
+export interface CompareResponse {
+  query: string;
+  topK: number;
+  modes: CompareModeResult[];
+}

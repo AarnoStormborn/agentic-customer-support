@@ -31,6 +31,7 @@ import { chatRoutes, type ChatRouteOptions } from "./routes/chat.js";
 import { taskRoutes } from "./routes/tasks.js";
 import { dataRoutes } from "./routes/data.js";
 import { sessionRoutes } from "./routes/sessions.js";
+import { retrievalRoutes } from "./routes/retrieval.js";
 
 export interface BuildAppDeps {
   registry: ChatRegistry;
@@ -65,6 +66,7 @@ export async function buildApp(overrides: Partial<BuildAppDeps> = {}): Promise<F
 
   await app.register(healthRoutes);
   await app.register(dataRoutes);
+  await app.register(retrievalRoutes);
   await app.register(sessionRoutes, { registry });
   await app.register(chatRoutes, { registry, createRuntime } satisfies ChatRouteOptions);
   await app.register(taskRoutes, { taskQueue });

@@ -946,3 +946,24 @@ would need a corpus where queries sit far from documents AND embeddings are weak
 
 Note: OCR text is noisy (garbled scan text), but the vector side tolerates it —
 the OCR'd manuals ranked #1-2 for microwave queries.
+
+---
+
+## 31. Live per-strategy comparison in the UI
+
+New endpoints + UI panel so the eval comparison is visible live:
+
+- **POST /api/retrieval/compare** { query, modes?, topK } → per-mode top results
+  (docName/section/score + relaxed + queryTimeMs). Runs searchHybrid directly
+  (no agent turn); hyde modes call an LLM for the hypothesis.
+- **POST /api/retrieval/search** { query, strategy } → one strategy.
+- **GET /api/retrieval/corpus** → manual/chunk counts.
+- UI: "Compare modes" button in the chat header runs the last user question
+  through all five modes and shows a side-by-side panel (mode label, relaxed
+  badge, top-3 with scores). Live A/B of retrieval techniques per question.
+- Tests: retrieval-api.test.ts mocks searchHybrid (4 tests — compare shape,
+  400 validation, all-modes default, single search + relaxed).
+
+Note: Docker Desktop's daemon was crash-looping on this machine (com.docker.backend
+signal: killed — cert/resource issue), which intermittently blocked live DB
+verification. Code is CI-verified instead.

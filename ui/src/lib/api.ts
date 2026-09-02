@@ -7,6 +7,7 @@ import type {
   ChatHistoryResponse,
   ChatStartResponse,
   Chunk,
+  CompareResponse,
   HealthResponse,
   ManualSummary,
   ModelsResponse,
@@ -80,6 +81,12 @@ export const api = {
       body: JSON.stringify(body),
     }),
 
+  compareRetrieval: (body: { query: string; modes?: string[]; topK?: number }) =>
+    request<CompareResponse>("/api/retrieval/compare", {
+      method: "POST",
+      body: JSON.stringify(body),
+    }),
+  corpus: () => request<{ manuals: number; chunks: number }>("/api/retrieval/corpus"),
   cancelChat: (chatId: string) =>
     request<{ cancelled: boolean }>(`/api/chat/${chatId}/cancel`, { method: "POST" }),
 
